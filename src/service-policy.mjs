@@ -187,6 +187,83 @@ export function reviewCostAccounting(groups, effectiveness, costs) {
   };
 }
 
+// Additional checks are distinct interventions, not distinct jobs. A second
+// actual check on one job is charged again; one check triggered by two rules
+// is entered once. Null means unknown, never zero cost or zero benefit.
+export function completeStrategyAccounting(base, additions, costs) {
+  const fields = [
+    ["additionalChecks", "额外提前核查次数", true],
+    ["otherHours", "未包含在核查定额中的其他人工工时", false],
+    ["additionalAvoidedFailures", "新增避免失败次数", false],
+  ];
+  const missing = [];
+  const errors = [];
+  for (const [key, label, integer] of fields) {
+    const value = additions[key];
+    if (value === null || value === undefined) missing.push(label);
+    else if (
+      !Number.isFinite(value) ||
+      value < 0 ||
+      (integer && !Number.isSafeInteger(value))
+    )
+      errors.push(`${label}须为非负${integer ? "整数" : "数值"}`);
+  }
+  if (
+    additions.additionalAvoidedFailures != null &&
+    additions.additionalAvoidedFailures > base.expectedRemainingFailures + 1e-8
+  )
+    errors.push("新增避免失败数不能超过基准尚未避免的已知失败，不能重复计收益");
+  if (
+    ![costs.crash, costs.intercept].every((v) => Number.isFinite(v) && v >= 0)
+  )
+    throw new RangeError("工时口径必须是非负有限值");
+  if (errors.length)
+    return {
+      status: "invalid",
+      missing,
+      errors,
+      additionalCheckHours: null,
+      totalCostHours: null,
+      totalAvoidedHours: null,
+      remainingFailureHours: null,
+      totalBurdenHours: null,
+      netHours: null,
+    };
+  const additionalCheckHours =
+    additions.additionalChecks == null
+      ? null
+      : additions.additionalChecks * costs.intercept;
+  const totalCostHours =
+    additionalCheckHours === null || additions.otherHours == null
+      ? null
+      : base.checkHours + additionalCheckHours + additions.otherHours;
+  const totalAvoidedHours =
+    additions.additionalAvoidedFailures == null
+      ? null
+      : base.avoidedHours + additions.additionalAvoidedFailures * costs.crash;
+  const remainingFailureHours =
+    totalAvoidedHours === null
+      ? null
+      : base.baselineFailureHours - totalAvoidedHours;
+  return {
+    status: missing.length ? "incomplete" : "scenario",
+    missing,
+    errors,
+    additionalCheckHours,
+    totalCostHours,
+    totalAvoidedHours,
+    remainingFailureHours,
+    totalBurdenHours:
+      totalCostHours === null || remainingFailureHours === null
+        ? null
+        : totalCostHours + remainingFailureHours,
+    netHours:
+      totalCostHours === null || totalAvoidedHours === null
+        ? null
+        : totalAvoidedHours - totalCostHours,
+  };
+}
+
 export function weightedFailureCoverage(groups, policy) {
   const weightedFailures = groups.reduce(
     (sum, g) => sum + g.failed * teamWeight(g.name, policy),

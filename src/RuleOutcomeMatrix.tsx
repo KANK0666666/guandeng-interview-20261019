@@ -98,20 +98,20 @@ export default function RuleOutcomeMatrix({
         }
       >
         <span>
-          核查投入 <b>{n(costPreview.checkHours)}</b> 工时
+          原规则投入 <b>{n(costPreview.checkHours)}</b> 工时
         </span>
         <span>
           {effect}% 有效时预计避免损失 <b>{n(costPreview.avoidedHours)}</b>
         </span>
         <span>
           {costPreview.assessment === "higher"
-            ? "净增加负荷"
+            ? "基准净增加负荷"
             : costPreview.assessment === "equal"
-              ? "工时持平"
-              : "净节省"}{" "}
+              ? "基准工时持平"
+              : "基准净节省"}{" "}
           <b>{n(Math.abs(costPreview.netHours))}</b> 工时
         </span>
-        <small>查看完整工时账 ↓</small>
+        <small>查看原规则明细 ↓</small>
       </button>
       <div className="rc-outcome-grid">
         {cards.map((card) => (

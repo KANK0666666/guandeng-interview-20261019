@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import ServicePolicyPanel from "./ServicePolicyPanel";
 import RuleOutcomeMatrix from "./RuleOutcomeMatrix";
+import StrategyCostPanel from "./StrategyCostPanel";
 import {
   normalizeServicePolicy,
   selectHistoricalTasks,
@@ -165,7 +166,23 @@ export default function RenderApp() {
     [page, setPage] = useState(1);
   const [scope, setScope] = useState<"all" | "hits" | "misses">("all");
   const [queueFocus, setQueueFocus] = useState(0);
-  const [effect, setEffect] = useState(50),
+  const [effect, setEffect] = useState(() => {
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("render-effectiveness-v1") || "null",
+        );
+        if (
+          typeof saved === "number" &&
+          Number.isFinite(saved) &&
+          saved >= 0 &&
+          saved <= 100
+        )
+          return saved;
+      } catch {
+        /* Use the labeled default scenario if no valid setting exists. */
+      }
+      return 50;
+    }),
     [selected, setSelected] = useState<Job | null>(null);
   const [created, setCreated] = useState(""),
     [synced, setSynced] = useState(""),
@@ -178,6 +195,13 @@ export default function RenderApp() {
       return [];
     }
   });
+  useEffect(() => {
+    try {
+      localStorage.setItem("render-effectiveness-v1", JSON.stringify(effect));
+    } catch {
+      /* Keep the live calculation available without persistent storage. */
+    }
+  }, [effect]);
   useEffect(() => {
     document.title = "RenderCare · 渲染提交预检";
     fetch("/api/render/report")
@@ -437,6 +461,11 @@ export default function RenderApp() {
               </section>
             </>
           )}
+          <StrategyCostPanel
+            groups={m.byTeam}
+            effect={effect}
+            costs={m.costs}
+          />
           {tab === "service" ? (
             <ServicePolicyPanel
               policy={servicePolicy}
@@ -464,7 +493,9 @@ export default function RenderApp() {
                         <ShieldCheck size={18} />
                         提交前预检
                       </h2>
-                      <p>仅用两个时间；上线需确认是提交时快照，不读取最终结果或显存。</p>
+                      <p>
+                        仅用两个时间；上线需确认是提交时快照，不读取最终结果或显存。
+                      </p>
                     </div>
                     <span className="rc-small-label">北京时间 UTC+8</span>
                   </div>
@@ -744,7 +775,7 @@ export default function RenderApp() {
                     />
                   </label>
                   <div className="rc-scenario">
-                    <span>全量历史净收益</span>
+                    <span>原同步规则基准净工时</span>
                     <strong className={net < 0 ? "negative" : ""}>
                       {n(net)} <small>工时</small>
                     </strong>
@@ -1127,7 +1158,8 @@ export default function RenderApp() {
             </dl>
             <p className="rc-feature-timing rc-detail-timing">
               <strong>显存可能含未来信息</strong>
-              CSV 未记录它何时被采集、何时可被系统使用。若来自运行中或失败后，不能用于提交前预测；“带入预检”仅带入两个时间。
+              CSV
+              未记录它何时被采集、何时可被系统使用。若来自运行中或失败后，不能用于提交前预测；“带入预检”仅带入两个时间。
             </p>
             <button
               className="rc-primary"

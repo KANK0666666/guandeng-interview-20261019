@@ -87,6 +87,29 @@ export function selectHistoricalTasks<
     intercept: boolean;
   },
 >(rows: T[], policy: ServicePolicy, filters?: HistoryFilters): T[];
+export type StrategyCostInputs = {
+  additionalChecks: number | null;
+  otherHours: number | null;
+  additionalAvoidedFailures: number | null;
+};
+export function completeStrategyAccounting(
+  base: Pick<
+    ImpactValues,
+    "checkHours" | "avoidedHours" | "expectedRemainingFailures"
+  > & { baselineFailureHours: number },
+  additions: StrategyCostInputs,
+  costs: { crash: number; intercept: number },
+): {
+  status: "invalid" | "incomplete" | "scenario";
+  missing: string[];
+  errors: string[];
+  additionalCheckHours: number | null;
+  totalCostHours: number | null;
+  totalAvoidedHours: number | null;
+  remainingFailureHours: number | null;
+  totalBurdenHours: number | null;
+  netHours: number | null;
+};
 export const KA_TEAM: string;
 export const CUSTOM_TEAM: string;
 export const TEAMS: string[];

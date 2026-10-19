@@ -13,6 +13,7 @@ import {
   selectHistoricalTasks,
   ruleOutcomeBreakdown,
   reviewCostAccounting,
+  completeStrategyAccounting,
   sortHistoricalQueue,
   weightedFailureCoverage,
 } from "../src/service-policy.mjs";
@@ -546,5 +547,151 @@ test("cost ledger identifies extra load and break-even without treating absent f
   assert.equal(
     reviewCostAccounting([], 50, metrics.costs).totals.assessment,
     "equal",
+  );
+});
+
+test("complete strategy leaves unknown extra costs and benefits uncomputed instead of treating them as free", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const base = reviewCostAccounting(metrics.byTeam, 50, metrics.costs).totals;
+  const result = completeStrategyAccounting(
+    base,
+    {
+      additionalChecks: null,
+      otherHours: null,
+      additionalAvoidedFailures: null,
+    },
+    metrics.costs,
+  );
+  assert.equal(result.status, "incomplete");
+  assert.equal(result.missing.length, 3);
+  assert.equal(result.totalCostHours, null);
+  assert.equal(result.totalAvoidedHours, null);
+  assert.equal(result.netHours, null);
+  const partial = completeStrategyAccounting(
+    base,
+    {
+      additionalChecks: 10,
+      otherHours: null,
+      additionalAvoidedFailures: 0,
+    },
+    metrics.costs,
+  );
+  assert.equal(partial.additionalCheckHours, 200);
+  assert.equal(partial.totalCostHours, null);
+  assert.equal(partial.totalAvoidedHours, 6720);
+  assert.equal(partial.netHours, null);
+});
+
+test("complete strategy charges every additional intervention and all non-overlapping labor against benefit", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const base = reviewCostAccounting(metrics.byTeam, 50, metrics.costs).totals;
+  const zero = {
+    additionalChecks: 0,
+    otherHours: 0,
+    additionalAvoidedFailures: 0,
+  };
+  assert.equal(
+    completeStrategyAccounting(base, zero, metrics.costs).netHours,
+    1280,
+  );
+  const checks = completeStrategyAccounting(
+    base,
+    { ...zero, additionalChecks: 100 },
+    metrics.costs,
+  );
+  assert.equal(checks.totalCostHours, 7440);
+  assert.equal(checks.netHours, -720);
+  assert.equal(checks.remainingFailureHours, 9360);
+  assert.equal(checks.totalBurdenHours, 16800);
+  assert.equal(
+    base.baselineFailureHours - checks.totalBurdenHours,
+    checks.netHours,
+  );
+  const labor = completeStrategyAccounting(
+    base,
+    { ...zero, additionalChecks: 100, otherHours: 40 },
+    metrics.costs,
+  );
+  assert.equal(labor.totalCostHours, 7480);
+  assert.equal(labor.netHours, -760);
+  const benefit = completeStrategyAccounting(
+    base,
+    { additionalChecks: 100, otherHours: 40, additionalAvoidedFailures: 5 },
+    metrics.costs,
+  );
+  assert.equal(benefit.totalAvoidedHours, 7320);
+  assert.equal(benefit.netHours, -160);
+  assert.equal(benefit.totalBurdenHours, 16240);
+  assert.equal(
+    base.baselineFailureHours - benefit.totalBurdenHours,
+    benefit.netHours,
+  );
+  assert.equal(
+    benefit.totalAvoidedHours - benefit.totalCostHours,
+    benefit.netHours,
+  );
+});
+
+test("additional check inputs count actual interventions, including repeats on the same job, without a job-count cap", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const base = reviewCostAccounting(metrics.byTeam, 50, metrics.costs).totals;
+  const calc = (count) =>
+    completeStrategyAccounting(
+      base,
+      { additionalChecks: count, otherHours: 0, additionalAvoidedFailures: 0 },
+      metrics.costs,
+    );
+  assert.equal(calc(1).netHours, 1260);
+  assert.equal(calc(2).netHours, 1240);
+  assert.equal(calc(1000).totalCostHours, 25440);
+});
+
+test("complete strategy rejects invalid costs and repeated benefit beyond remaining historical failures", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const base = reviewCostAccounting(metrics.byTeam, 50, metrics.costs).totals;
+  const zero = {
+    additionalChecks: 0,
+    otherHours: 0,
+    additionalAvoidedFailures: 0,
+  };
+  for (const patch of [
+    { additionalChecks: -1 },
+    { additionalChecks: 1.5 },
+    { otherHours: -1 },
+    { otherHours: NaN },
+    { additionalAvoidedFailures: 79 },
+  ]) {
+    const result = completeStrategyAccounting(
+      base,
+      { ...zero, ...patch },
+      metrics.costs,
+    );
+    assert.equal(result.status, "invalid");
+    assert.equal(result.netHours, null);
+    assert.ok(result.errors.length);
+  }
+  const atLimit = completeStrategyAccounting(
+    base,
+    { ...zero, additionalChecks: 78, additionalAvoidedFailures: 78 },
+    metrics.costs,
+  );
+  assert.equal(atLimit.totalAvoidedHours, 16080);
+  assert.equal(atLimit.status, "scenario");
+  const changedBase = reviewCostAccounting(
+    metrics.byTeam,
+    100,
+    metrics.costs,
+  ).totals;
+  assert.equal(
+    completeStrategyAccounting(
+      changedBase,
+      { ...zero, additionalAvoidedFailures: 23 },
+      metrics.costs,
+    ).status,
+    "invalid",
+  );
+  assert.throws(
+    () => completeStrategyAccounting(base, zero, { crash: 120, intercept: -1 }),
+    RangeError,
   );
 });

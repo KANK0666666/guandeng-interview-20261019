@@ -105,8 +105,10 @@ export default function ServicePolicyPanel({
       <section className="rc-panel rc-live-overview">
         <div className="rc-panel-heading">
           <div>
-            <h2>人工预检的实时试算</h2>
-            <p>拖动滑块立即重算。历史数据固定；尚未接入线上任务实时状态。</p>
+            <h2>原同步规则的实时试算</h2>
+            <p>
+              拖动滑块立即重算基准。完整策略的新增人工成本在上方另计，尚未接入线上任务实时状态。
+            </p>
           </div>
           <span className="rc-pill">当前假设 {effect}% 有效</span>
         </div>
@@ -133,11 +135,11 @@ export default function ServicePolicyPanel({
             <small>随权重变化 · 不代表工时或续费</small>
           </div>
           <div>
-            <span>情景净节省（成本参考）</span>
+            <span>原规则基准净工时</span>
             <strong data-testid="service-net-hours">
               {number(totals.netHours)} 工时
             </strong>
-            <small>预计避免损失 − 全部核查成本</small>
+            <small>原规则预计避免损失 − 原规则核查成本</small>
           </div>
         </div>
         <p className="rc-live-facts">
@@ -276,11 +278,11 @@ export default function ServicePolicyPanel({
                         </strong>
                       </div>
                       <div>
-                        <span>核查投入（题目口径）</span>
+                        <span>原规则核查投入（题目口径）</span>
                         <strong>{number(group.checkHours)} 工时</strong>
                       </div>
                       <div>
-                        <span>情景净节省 · {effect}% 有效</span>
+                        <span>原规则基准净工时 · {effect}% 有效</span>
                         <strong
                           data-testid={`${key}-net`}
                           className={
@@ -518,7 +520,7 @@ export default function ServicePolicyPanel({
                 <th>同步规则命中任务</th>
                 <th>圈到 / 全部已知失败</th>
                 <th>未圈到的失败</th>
-                <th>情景净工时 / 加权分</th>
+                <th>原规则净工时 / 加权分</th>
               </tr>
             </thead>
             <tbody>

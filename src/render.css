@@ -59,6 +59,68 @@ select:focus-visible {
   font-size: 12px;
   line-height: 1.7;
 }
+.rc-complete-cost {
+  border-color: #bdd0c5;
+}
+.rc-complete-summary,
+.rc-complete-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.rc-complete-summary > div {
+  padding: 16px;
+  border: 1px solid #e2e8e4;
+  border-radius: 9px;
+  background: #f6f9f6;
+}
+.rc-complete-summary span,
+.rc-complete-summary small,
+.rc-complete-inputs small {
+  display: block;
+  color: #68766e;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.rc-complete-summary strong {
+  display: block;
+  margin: 9px 0;
+  color: #496552;
+  font-size: 22px;
+}
+.rc-complete-summary .rc-complete-loss strong {
+  color: #aa5437;
+}
+.rc-complete-status {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #755c31;
+  margin: 16px 0;
+}
+.rc-complete-inputs label > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.rc-complete-inputs input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cdd8d0;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font: inherit;
+  margin-bottom: 8px;
+  background: white;
+}
+.rc-complete-equation {
+  margin: 18px 0 12px;
+  padding: 12px;
+  border-radius: 7px;
+  background: #f3f5f3;
+  font-size: 12px;
+  line-height: 1.8;
+}
 .rc-feature-timing summary {
   cursor: pointer;
   font-weight: 650;

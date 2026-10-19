@@ -27,10 +27,10 @@ export default function ReviewCostLedger({
   const total = ledger.totals;
   const balance =
     total.assessment === "higher"
-      ? "情景净增加负荷"
+      ? "基准情景净增加负荷"
       : total.assessment === "lower"
-        ? "情景净节省"
-        : "情景工时持平";
+        ? "基准情景净节省"
+        : "基准情景工时持平";
   return (
     <div
       className="rc-cost-ledger"
@@ -39,18 +39,18 @@ export default function ReviewCostLedger({
     >
       <div className="rc-panel-heading">
         <div>
-          <h3>核查投入与工时账</h3>
+          <h3>原同步规则工时账（仅基准）</h3>
           <p>
-            {groups.length === 1 ? groups[0].name : "全部团队"} ·
-            同步 ≥20 分钟规则回放，按题目每次核查 {costs.intercept}{" "}
-            工时、失败损失 {costs.crash} 工时计算。
+            {groups.length === 1 ? groups[0].name : "全部团队"} · 同步 ≥20
+            分钟规则回放，按题目每次核查 {costs.intercept} 工时、失败损失{" "}
+            {costs.crash} 工时计算。
           </p>
         </div>
         <span className="rc-pill">情景测算 · 尚非实测收益</span>
       </div>
       <div className="rc-cost-summary" aria-live="polite">
         <div>
-          <span>全部核查投入</span>
+          <span>原规则核查投入</span>
           <strong data-testid="cost-check-hours">
             {n(total.checkHours)} 工时
           </strong>
@@ -59,7 +59,7 @@ export default function ReviewCostLedger({
           </small>
         </div>
         <div>
-          <span>预计避免的失败损失</span>
+          <span>原规则预计避免的失败损失</span>
           <strong data-testid="cost-avoided-hours">
             {n(total.avoidedHours)} 工时
           </strong>
@@ -106,7 +106,7 @@ export default function ReviewCostLedger({
             <tr>
               <th>团队</th>
               <th>成功但圈到 / 核查成本</th>
-              <th>全部核查投入</th>
+              <th>原规则核查投入</th>
               <th>预计避免损失</th>
               <th>净工时</th>
               <th>盈亏平衡 α</th>
@@ -157,7 +157,7 @@ export default function ReviewCostLedger({
         {total.breakEvenEffectiveness !== null
           ? `当前范围盈亏平衡 α ≈ ${pct(total.breakEvenEffectiveness)}（四舍五入）；有效比例超过精确盈亏点，模型中的净工时才为正。`
           : "当前范围没有可计算的已知失败盈亏点。"}{" "}
-        这能说明假设下的取舍，尚不能证明线上策略有效。10 分钟无结果跟进尚无实际触发与耗时记录，未计入本账。要验证实际负荷，需记录核查与返工的真实耗时、干预后的结果；交付保障、质量检查和客户价值另行评估，不能仅凭负工时情景取消必要服务。
+        这只是原规则基准，不能当作完整策略净收益。新增无结果跟进、显存检查及其他人工投入在上方完整策略工时账填写；缺少次数和工时不能当作免费，整体净值保持待核定。实际效果仍需记录干预后结果，交付保障和客户价值另行评估。
       </p>
     </div>
   );
