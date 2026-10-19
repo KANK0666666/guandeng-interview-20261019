@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RuleOutcomeMatrix from "./RuleOutcomeMatrix";
 import {
   Clock3,
   RotateCcw,
@@ -12,30 +13,36 @@ import {
   TEAMS,
   normalizeServicePolicy,
   serviceDecision,
+  serviceImpact,
   teamWeight,
   weightedFailureCoverage,
   type ServicePolicy,
   type ServiceScenario,
+  type ImpactGroup,
+  type HistoryFilters,
 } from "./service-policy.mjs";
 
-type TeamEvidence = {
-  name: string;
-  failed: number;
-  policy: { intercepted: number; caughtFailures: number };
-};
 type Props = {
   policy: ServicePolicy;
   onChange: (policy: ServicePolicy) => void;
-  teams: TeamEvidence[];
-  onShowQueue: () => void;
+  teams: ImpactGroup[];
+  effect: number;
+  onEffectChange: (effect: number) => void;
+  costs: { crash: number; intercept: number };
+  onShowQueue: (filters?: HistoryFilters) => void;
 };
 const percent = (v: number | null) =>
   v === null ? "—" : `${(v * 100).toFixed(1)}%`;
+const number = (value: number) =>
+  value.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 
 export default function ServicePolicyPanel({
   policy,
   onChange,
   teams,
+  effect,
+  onEffectChange,
+  costs,
   onShowQueue,
 }: Props) {
   const [scenario, setScenario] = useState<ServiceScenario>({
@@ -46,9 +53,11 @@ export default function ServicePolicyPanel({
   });
   const decision = serviceDecision(scenario, policy);
   const coverage = weightedFailureCoverage(teams, policy);
+  const impact = serviceImpact(teams, policy, effect, costs);
+  const totals = impact.totals;
   const update = (patch: Partial<ServicePolicy>) =>
     onChange(normalizeServicePolicy({ ...policy, ...patch }));
-  const ranked = [...teams].sort(
+  const ranked = [...impact.teams].sort(
     (a, b) =>
       teamWeight(b.name, policy) - teamWeight(a.name, policy) ||
       a.name.localeCompare(b.name, "zh-CN"),
@@ -78,14 +87,84 @@ export default function ServicePolicyPanel({
       <div className="rc-service-intro">
         <ShieldCheck size={21} />
         <div>
-          <strong>先满足服务保障，再决定关注顺序</strong>
+          <strong>提前识别风险，投入人工解决问题</strong>
           <p>
-            KA
-            与定制任务到达无结果时限，就建议安排人工核查。权重再低也不会取消这项保障，普通任务已有的检查继续执行。
+            先看圈到了多少历史失败、漏过多少，再评估核查投入。权重决定关注顺序；KA
+            与定制的无结果时限独立保障，普通任务已有的检查继续执行。
           </p>
         </div>
         <span className="rc-pill">业务假设 · 本地演示</span>
       </div>
+      <RuleOutcomeMatrix groups={teams} onShowQueue={onShowQueue} />
+      <section className="rc-panel rc-live-overview">
+        <div className="rc-panel-heading">
+          <div>
+            <h2>人工预检的实时试算</h2>
+            <p>拖动滑块立即重算。历史数据固定；尚未接入线上任务实时状态。</p>
+          </div>
+          <span className="rc-pill">当前假设 {effect}% 有效</span>
+        </div>
+        <div className="rc-live-cards" aria-live="polite">
+          <div>
+            <span>情景预计避免失败</span>
+            <strong data-testid="expected-avoided">
+              {number(totals.expectedAvoidedFailures)} 次
+            </strong>
+            <small>原规则圈到 {totals.caughtFailures} 个历史失败</small>
+          </div>
+          <div>
+            <span>情景仍未避免的失败</span>
+            <strong data-testid="expected-remaining">
+              {number(totals.expectedRemainingFailures)} 次
+            </strong>
+            <small>仅在 {totals.failed} 个已知失败中估算</small>
+          </div>
+          <div>
+            <span>避免失败的加权分</span>
+            <strong data-testid="weighted-avoided">
+              {number(totals.weightedAvoidedFailures)} 分
+            </strong>
+            <small>随权重变化 · 不代表工时或续费</small>
+          </div>
+          <div>
+            <span>情景净节省（成本参考）</span>
+            <strong data-testid="service-net-hours">
+              {number(totals.netHours)} 工时
+            </strong>
+            <small>预计避免损失 − 全部核查成本</small>
+          </div>
+        </div>
+        <p className="rc-live-facts">
+          历史结果：成功 {totals.succeeded}、失败 {totals.failed}、未回传{" "}
+          {totals.unknown}。 规则命中 {totals.intercepted} 个：失败{" "}
+          {totals.caughtFailures}、成功 {totals.falseInterceptions}、未回传{" "}
+          {totals.interceptedUnknown}； 漏过{" "}
+          {totals.failed - totals.caughtFailures} 个已知失败，按题目核查成本为{" "}
+          {number(totals.checkHours)} 工时。
+        </p>
+        <label className="rc-effect-control">
+          <span>
+            假设核查后能避免多少原本会发生的失败 <strong>{effect}%</strong>
+          </span>
+          <input
+            aria-label="业务保障假设有效比例"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={effect}
+            onChange={(event) => onEffectChange(Number(event.target.value))}
+          />
+          <small>
+            不是从数据测得的修复率。改变它会更新失败与工时情景；只改权重不会改变原来的失败事实或核查数量。
+          </small>
+        </label>
+        <p className="rc-policy-note">
+          加权分＝Σ（预计避免失败数 × 团队权重），避免一次普通任务失败记 1
+          分。它表达业务关注假设，不与工时相减；预计次数可以为小数，不生成新的成功记录。满意度、交付验收和订阅
+          / 续费尚无数据。
+        </p>
+      </section>
       <div className="rc-policy-grid">
         <section className="rc-panel">
           <div className="rc-panel-heading">
@@ -94,7 +173,7 @@ export default function ServicePolicyPanel({
                 <SlidersHorizontal size={17} />
                 业务关注权重
               </h2>
-              <p>普通任务基准为 1；影响清单顺序与历史覆盖评价。</p>
+              <p>每个滑块下方直接显示该组结果、核查投入和实时试算。</p>
             </div>
             <button
               className="rc-policy-reset"
@@ -119,47 +198,112 @@ export default function ServicePolicyPanel({
                 "默认 30 是待确认的起点；可提高或降低。",
               ],
             ] as const
-          ).map(([key, label, description, hint]) => (
-            <div className="rc-weight-control" key={key}>
-              <div className="rc-weight-heading">
-                <label htmlFor={`weight-${key}`}>
-                  {label}
-                  <small>{description}</small>
-                </label>
-                <div>
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    step={1}
-                    aria-label={`${label}权重数值`}
-                    value={policy[key]}
-                    onChange={(event) =>
-                      update({ [key]: Number(event.target.value) })
-                    }
-                  />
-                  <span>×</span>
+          ).map(([key, label, description, hint]) => {
+            const group = impact.teams.find(
+              (item) =>
+                item.name === (key === "kaWeight" ? KA_TEAM : CUSTOM_TEAM),
+            );
+            return (
+              <div className="rc-weight-control" key={key}>
+                <div className="rc-weight-heading">
+                  <label htmlFor={`weight-${key}`}>
+                    {label}
+                    <small>{description}</small>
+                  </label>
+                  <div>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      step={1}
+                      aria-label={`${label}权重数值`}
+                      value={policy[key]}
+                      onChange={(event) =>
+                        update({ [key]: Number(event.target.value) })
+                      }
+                    />
+                    <span>×</span>
+                  </div>
                 </div>
+                <input
+                  id={`weight-${key}`}
+                  aria-label={`${label}权重滑块`}
+                  type="range"
+                  min={1}
+                  max={500}
+                  step={1}
+                  value={policy[key]}
+                  onChange={(event) =>
+                    update({ [key]: Number(event.target.value) })
+                  }
+                />
+                <div className="rc-range-ends">
+                  <span>1</span>
+                  <span>500</span>
+                </div>
+                <p>{hint}</p>
+                {group && (
+                  <div
+                    className="rc-team-feedback"
+                    data-testid={`feedback-${key}`}
+                  >
+                    <small>历史结果 · 点击数量查看真实任务</small>
+                    <OutcomeButtons group={group} onShowQueue={onShowQueue} />
+                    <p>
+                      规则圈到 {group.policy.intercepted} 个任务：失败{" "}
+                      {group.policy.caughtFailures}、成功{" "}
+                      {group.policy.falseInterceptions}、未回传{" "}
+                      {group.policy.interceptedUnknown}。 另漏过{" "}
+                      {group.failed - group.policy.caughtFailures} 个历史失败。
+                    </p>
+                    <div className="rc-team-impact" aria-live="polite">
+                      <div>
+                        <span>预计避免失败</span>
+                        <strong data-testid={`${key}-avoided`}>
+                          {number(group.expectedAvoidedFailures)} 次
+                        </strong>
+                      </div>
+                      <div>
+                        <span>避免失败的加权分</span>
+                        <strong data-testid={`${key}-score`}>
+                          {number(group.weightedAvoidedFailures)} 分
+                        </strong>
+                      </div>
+                      <div>
+                        <span>核查投入（题目口径）</span>
+                        <strong>{number(group.checkHours)} 工时</strong>
+                      </div>
+                      <div>
+                        <span>情景净节省 · {effect}% 有效</span>
+                        <strong
+                          data-testid={`${key}-net`}
+                          className={
+                            group.netHours < 0 ? "rc-negative-value" : ""
+                          }
+                        >
+                          {number(group.netHours)} 工时
+                        </strong>
+                      </div>
+                    </div>
+                    <p className="rc-impact-formula">
+                      {group.policy.caughtFailures} × {costs.crash} × {effect}%
+                      − {group.policy.intercepted} × {costs.intercept} ＝{" "}
+                      {number(group.netHours)}{" "}
+                      工时。只调重要性不会改变这笔人力账，也不能据此撤掉必要检查。
+                    </p>
+                    <button
+                      className="rc-policy-link"
+                      onClick={() =>
+                        onShowQueue({ team: group.name, scope: "hits" })
+                      }
+                    >
+                      查看这 {group.policy.intercepted} 个命中任务
+                    </button>
+                  </div>
+                )}
               </div>
-              <input
-                id={`weight-${key}`}
-                aria-label={`${label}权重滑块`}
-                type="range"
-                min={1}
-                max={500}
-                step={1}
-                value={policy[key]}
-                onChange={(event) =>
-                  update({ [key]: Number(event.target.value) })
-                }
-              />
-              <div className="rc-range-ends">
-                <span>1</span>
-                <span>500</span>
-              </div>
-              <p>{hint}</p>
-            </div>
-          ))}
+            );
+          })}
           <div className="rc-baseline-note">
             <strong>普通任务 1×</strong>
             <span>
@@ -337,7 +481,10 @@ export default function ServicePolicyPanel({
               条同步规则命中任务；下表按权重展示团队顺序，同权重的任务按提交先后排列。
             </p>
           </div>
-          <button className="rc-primary" onClick={onShowQueue}>
+          <button
+            className="rc-primary"
+            onClick={() => onShowQueue({ scope: "hits" })}
+          >
             查看排序后的历史清单
           </button>
         </div>
@@ -361,9 +508,11 @@ export default function ServicePolicyPanel({
               <tr>
                 <th>团队</th>
                 <th>关注权重</th>
+                <th>全部历史结果 · 可查看任务</th>
                 <th>同步规则命中任务</th>
                 <th>圈到 / 全部已知失败</th>
                 <th>未圈到的失败</th>
+                <th>情景净工时 / 加权分</th>
               </tr>
             </thead>
             <tbody>
@@ -373,11 +522,21 @@ export default function ServicePolicyPanel({
                   <td>
                     <strong>{teamWeight(group.name, policy)}×</strong>
                   </td>
+                  <td>
+                    <OutcomeButtons group={group} onShowQueue={onShowQueue} />
+                  </td>
                   <td>{group.policy.intercepted}</td>
                   <td>
                     {group.policy.caughtFailures} / {group.failed}
                   </td>
                   <td>{group.failed - group.policy.caughtFailures}</td>
+                  <td>
+                    {number(group.netHours)} 工时
+                    <small>
+                      {number(group.weightedAvoidedFailures)} 分 · {effect}%
+                      有效
+                    </small>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -400,6 +559,37 @@ export default function ServicePolicyPanel({
           上线需记录任务提交、首次结果、核查触发、负责人、处理动作及各方实际投入。评估设计师返工、客户额外操作、等待与按期交付，同时保留普通任务的服务保障。新增时限先进入试点验证。
         </p>
       </section>
+    </div>
+  );
+}
+
+function OutcomeButtons({
+  group,
+  onShowQueue,
+}: {
+  group: ImpactGroup;
+  onShowQueue: Props["onShowQueue"];
+}) {
+  return (
+    <div className="rc-outcome-buttons">
+      {(
+        [
+          ["success", "成功", group.succeeded],
+          ["failure", "失败", group.failed],
+          ["unknown", "未回传", group.unknown],
+        ] as const
+      ).map(([outcome, label, count]) => (
+        <button
+          key={outcome}
+          className={outcome}
+          aria-label={`查看${group.name}历史${label}任务`}
+          onClick={() =>
+            onShowQueue({ team: group.name, outcome, scope: "all" })
+          }
+        >
+          {label} <strong>{count}</strong>
+        </button>
+      ))}
     </div>
   );
 }

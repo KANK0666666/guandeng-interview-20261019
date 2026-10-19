@@ -9,9 +9,14 @@ import {
   TEAMS,
   normalizeServicePolicy,
   serviceDecision,
+  serviceImpact,
+  selectHistoricalTasks,
+  ruleOutcomeBreakdown,
   sortHistoricalQueue,
   weightedFailureCoverage,
 } from "../src/service-policy.mjs";
+import { loadRender } from "../server/render.mjs";
+import { fileURLToPath } from "node:url";
 
 // Synthetic scenarios exercise policy boundaries only; they never enter CSV metrics.
 const pending = {
@@ -267,4 +272,185 @@ test("empty failure evidence stays unestimated instead of claiming zero or full 
     ]).coverage,
     null,
   );
+});
+
+test("live scenario separates historical outcomes, expected avoided failures, and full human-check costs", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const half = serviceImpact(
+    metrics.byTeam,
+    DEFAULT_SERVICE_POLICY,
+    50,
+    metrics.costs,
+  );
+  assert.equal(half.totals.succeeded, 772);
+  assert.equal(half.totals.failed, 134);
+  assert.equal(half.totals.unknown, 51);
+  assert.equal(half.totals.expectedAvoidedFailures, 56);
+  assert.equal(half.totals.expectedRemainingFailures, 78);
+  assert.equal(half.totals.weightedAvoidedFailures, 1878);
+  assert.equal(half.totals.checkHours, 5440);
+  assert.equal(half.totals.avoidedHours, 6720);
+  assert.equal(half.totals.netHours, 1280);
+  const custom = half.teams.find((group) => group.name === CUSTOM_TEAM);
+  assert.equal(custom.expectedAvoidedFailures, 6.5);
+  assert.equal(custom.expectedRemainingFailures, 18.5);
+  assert.equal(custom.checkHours, 1380); // includes 55 successes and one unknown
+  assert.equal(custom.netHours, -600);
+  const zero = serviceImpact(
+    metrics.byTeam,
+    DEFAULT_SERVICE_POLICY,
+    0,
+    metrics.costs,
+  );
+  assert.equal(zero.totals.expectedRemainingFailures, 134);
+  assert.equal(zero.totals.netHours, -5440);
+  assert.equal(zero.totals.weightedAvoidedFailures, 0);
+  const full = serviceImpact(
+    metrics.byTeam,
+    DEFAULT_SERVICE_POLICY,
+    100,
+    metrics.costs,
+  );
+  assert.equal(full.totals.expectedAvoidedFailures, 112);
+  assert.equal(full.totals.expectedRemainingFailures, 22); // never implies all failures fixed
+  assert.equal(full.totals.netHours, 8000);
+  for (const value of [NaN, Infinity, -1, 101]) {
+    assert.throws(
+      () =>
+        serviceImpact(
+          metrics.byTeam,
+          DEFAULT_SERVICE_POLICY,
+          value,
+          metrics.costs,
+        ),
+      RangeError,
+    );
+  }
+});
+
+test("changing importance updates only weighted protection, not historical success or physical hours", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const original = structuredClone(metrics.byTeam);
+  const base = serviceImpact(
+    metrics.byTeam,
+    DEFAULT_SERVICE_POLICY,
+    50,
+    metrics.costs,
+  );
+  const raised = serviceImpact(
+    metrics.byTeam,
+    { ...DEFAULT_SERVICE_POLICY, customWeight: 200 },
+    50,
+    metrics.costs,
+  );
+  assert.equal(
+    base.teams.find((group) => group.name === CUSTOM_TEAM)
+      .weightedAvoidedFailures,
+    195,
+  );
+  assert.equal(
+    raised.teams.find((group) => group.name === CUSTOM_TEAM)
+      .weightedAvoidedFailures,
+    1300,
+  );
+  assert.equal(raised.totals.weightedAvoidedFailures, 2983);
+  for (const key of [
+    "succeeded",
+    "failed",
+    "unknown",
+    "intercepted",
+    "expectedAvoidedFailures",
+    "expectedRemainingFailures",
+    "netHours",
+    "checkHours",
+  ]) {
+    assert.equal(raised.totals[key], base.totals[key]);
+  }
+  assert.deepEqual(metrics.byTeam, original);
+});
+
+test("result drill-down includes all histories and distinguishes them from sync-rule hits", () => {
+  const { rows } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const filters = { team: CUSTOM_TEAM, scope: "all" };
+  assert.equal(selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY).length, 957);
+  assert.equal(
+    selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, { scope: "hits" })
+      .length,
+    272,
+  );
+  const expected = { success: [192, 55], failure: [25, 13], unknown: [16, 1] };
+  for (const [outcome, [all, hits]] of Object.entries(expected)) {
+    const history = selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+      ...filters,
+      outcome,
+    });
+    assert.equal(history.length, all);
+    assert.ok(
+      history.every(
+        (row) => row.outcome === outcome && row.team_id === CUSTOM_TEAM,
+      ),
+    );
+    assert.equal(
+      selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+        ...filters,
+        outcome,
+        scope: "hits",
+      }).length,
+      hits,
+    );
+  }
+  const missed = selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+    ...filters,
+    outcome: "failure",
+  }).filter((row) => !row.intercept);
+  assert.equal(missed.length, 12);
+  assert.equal(
+    selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+      ...filters,
+      query: "不存在的场景",
+    }).length,
+    0,
+  );
+});
+
+test("outcome quadrants reconcile with task drill-downs and keep unknown outcomes separate", () => {
+  const { rows, metrics } = loadRender(
+    fileURLToPath(new URL("..", import.meta.url)),
+  );
+  assert.deepEqual(ruleOutcomeBreakdown(metrics.byTeam), {
+    successUnflagged: 626,
+    failureUnflagged: 22,
+    failureFlagged: 112,
+    successFlagged: 146,
+    unknownFlagged: 14,
+    unknownUnflagged: 37,
+  });
+  const mapping = [
+    ["successUnflagged", "success", "misses"],
+    ["failureUnflagged", "failure", "misses"],
+    ["failureFlagged", "failure", "hits"],
+    ["successFlagged", "success", "hits"],
+    ["unknownFlagged", "unknown", "hits"],
+    ["unknownUnflagged", "unknown", "misses"],
+  ];
+  for (const team of ["", ...TEAMS]) {
+    const groups = team
+      ? metrics.byTeam.filter((group) => group.name === team)
+      : metrics.byTeam;
+    const counts = ruleOutcomeBreakdown(groups);
+    for (const [key, outcome, scope] of mapping) {
+      assert.equal(
+        counts[key],
+        selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+          team,
+          outcome,
+          scope,
+        }).length,
+      );
+    }
+    assert.equal(
+      Object.values(counts).reduce((a, b) => a + b, 0),
+      groups.reduce((sum, group) => sum + group.jobs, 0),
+    );
+  }
 });

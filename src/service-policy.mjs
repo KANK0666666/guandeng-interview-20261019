@@ -54,6 +54,103 @@ export function sortHistoricalQueue(rows, policy) {
   );
 }
 
+export function selectHistoricalTasks(rows, policy, filters = {}) {
+  return sortHistoricalQueue(
+    rows.filter(
+      (row) =>
+        (filters.scope !== "hits" || row.intercept) &&
+        (filters.scope !== "misses" || !row.intercept) &&
+        (!filters.team || row.team_id === filters.team) &&
+        (!filters.outcome || row.outcome === filters.outcome) &&
+        (!filters.query ||
+          `${row.job_id} ${row.scene_type}`.includes(filters.query)),
+    ),
+    policy,
+  );
+}
+
+// Historical outcomes never change. The counterfactual below assumes the same
+// effectiveness for each group and cannot establish a causal repair rate.
+export function serviceImpact(groups, policy, effectiveness, costs) {
+  if (
+    !Number.isFinite(effectiveness) ||
+    effectiveness < 0 ||
+    effectiveness > 100
+  )
+    throw new RangeError("有效比例必须在 0—100% 之间");
+  if (
+    ![costs.crash, costs.intercept].every((v) => Number.isFinite(v) && v >= 0)
+  )
+    throw new RangeError("工时口径必须是非负有限值");
+  const teams = groups.map((group) => {
+    const weight = teamWeight(group.name, policy);
+    const expectedAvoidedFailures =
+      (group.policy.caughtFailures * effectiveness) / 100;
+    const checkHours = group.policy.intercepted * costs.intercept;
+    const avoidedHours = expectedAvoidedFailures * costs.crash;
+    return {
+      ...group,
+      weight,
+      expectedAvoidedFailures,
+      expectedRemainingFailures: group.failed - expectedAvoidedFailures,
+      weightedAvoidedFailures: expectedAvoidedFailures * weight,
+      checkHours,
+      avoidedHours,
+      netHours: avoidedHours - checkHours,
+    };
+  });
+  const totals = {
+    jobs: 0,
+    succeeded: 0,
+    failed: 0,
+    unknown: 0,
+    intercepted: 0,
+    caughtFailures: 0,
+    falseInterceptions: 0,
+    interceptedUnknown: 0,
+    expectedAvoidedFailures: 0,
+    expectedRemainingFailures: 0,
+    weightedAvoidedFailures: 0,
+    checkHours: 0,
+    avoidedHours: 0,
+    netHours: 0,
+  };
+  for (const group of teams) {
+    for (const key of Object.keys(totals)) {
+      totals[key] += key in group ? group[key] : group.policy[key];
+    }
+  }
+  return { teams, totals };
+}
+
+export function ruleOutcomeBreakdown(groups) {
+  return groups.reduce(
+    (total, group) => ({
+      successUnflagged:
+        total.successUnflagged +
+        group.succeeded -
+        group.policy.falseInterceptions,
+      failureUnflagged:
+        total.failureUnflagged + group.failed - group.policy.caughtFailures,
+      failureFlagged: total.failureFlagged + group.policy.caughtFailures,
+      successFlagged: total.successFlagged + group.policy.falseInterceptions,
+      unknownFlagged: total.unknownFlagged + group.policy.interceptedUnknown,
+      unknownUnflagged:
+        total.unknownUnflagged +
+        group.unknown -
+        group.policy.interceptedUnknown,
+    }),
+    {
+      successUnflagged: 0,
+      failureUnflagged: 0,
+      failureFlagged: 0,
+      successFlagged: 0,
+      unknownFlagged: 0,
+      unknownUnflagged: 0,
+    },
+  );
+}
+
 export function weightedFailureCoverage(groups, policy) {
   const weightedFailures = groups.reduce(
     (sum, g) => sum + g.failed * teamWeight(g.name, policy),

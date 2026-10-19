@@ -14,6 +14,60 @@ export type CoverageGroup = {
   failed: number;
   policy: { caughtFailures: number };
 };
+export type HistoryFilters = {
+  scope?: "all" | "hits" | "misses";
+  team?: string;
+  outcome?: "success" | "failure" | "unknown" | "";
+  query?: string;
+};
+export type ImpactGroup = CoverageGroup & {
+  jobs: number;
+  succeeded: number;
+  unknown: number;
+  policy: {
+    intercepted: number;
+    caughtFailures: number;
+    falseInterceptions: number;
+    interceptedUnknown: number;
+  };
+};
+export type ImpactValues = {
+  expectedAvoidedFailures: number;
+  expectedRemainingFailures: number;
+  weightedAvoidedFailures: number;
+  checkHours: number;
+  avoidedHours: number;
+  netHours: number;
+};
+export function ruleOutcomeBreakdown(groups: ImpactGroup[]): {
+  successUnflagged: number;
+  failureUnflagged: number;
+  failureFlagged: number;
+  successFlagged: number;
+  unknownFlagged: number;
+  unknownUnflagged: number;
+};
+export function serviceImpact(
+  groups: ImpactGroup[],
+  policy: ServicePolicy,
+  effectiveness: number,
+  costs: { crash: number; intercept: number },
+): {
+  teams: (ImpactGroup & ImpactValues & { weight: number })[];
+  totals: ImpactValues &
+    Omit<ImpactGroup, "name" | "policy"> &
+    ImpactGroup["policy"];
+};
+export function selectHistoricalTasks<
+  T extends {
+    team_id: string;
+    created_at: string;
+    job_id: string;
+    scene_type: string;
+    outcome: string;
+    intercept: boolean;
+  },
+>(rows: T[], policy: ServicePolicy, filters?: HistoryFilters): T[];
 export const KA_TEAM: string;
 export const CUSTOM_TEAM: string;
 export const TEAMS: string[];

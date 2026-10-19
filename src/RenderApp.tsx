@@ -14,10 +14,12 @@ import {
   X,
 } from "lucide-react";
 import ServicePolicyPanel from "./ServicePolicyPanel";
+import RuleOutcomeMatrix from "./RuleOutcomeMatrix";
 import {
   normalizeServicePolicy,
-  sortHistoricalQueue,
+  selectHistoricalTasks,
   teamWeight,
+  type HistoryFilters,
   type ServicePolicy,
 } from "./service-policy.mjs";
 import "./render.css";
@@ -152,8 +154,10 @@ export default function RenderApp() {
   });
   const [search, setSearch] = useState(""),
     [team, setTeam] = useState(""),
-    [status, setStatus] = useState(""),
+    [status, setStatus] = useState<HistoryFilters["outcome"]>(""),
     [page, setPage] = useState(1);
+  const [scope, setScope] = useState<"all" | "hits" | "misses">("all");
+  const [queueFocus, setQueueFocus] = useState(0);
   const [effect, setEffect] = useState(50),
     [selected, setSelected] = useState<Job | null>(null);
   const [created, setCreated] = useState(""),
@@ -184,7 +188,14 @@ export default function RenderApp() {
   }, []);
   useEffect(() => {
     setPage(1);
-  }, [search, team, status, servicePolicy]);
+  }, [search, team, status, scope, servicePolicy]);
+  useEffect(() => {
+    if (queueFocus && tab === "queue") {
+      document
+        .getElementById("historical-tasks")
+        ?.scrollIntoView({ block: "start" });
+    }
+  }, [queueFocus, tab]);
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -197,18 +208,23 @@ export default function RenderApp() {
   }, [servicePolicy]);
   const queue = useMemo(
     () =>
-      sortHistoricalQueue(
-        report?.rows.filter(
-          (r) =>
-            r.intercept &&
-            (!team || r.team_id === team) &&
-            (!status || r.outcome === status) &&
-            (!search || `${r.job_id} ${r.scene_type}`.includes(search)),
-        ) || [],
-        servicePolicy,
-      ),
-    [report, search, team, status, servicePolicy],
+      selectHistoricalTasks(report?.rows || [], servicePolicy, {
+        scope,
+        team,
+        outcome: status,
+        query: search,
+      }),
+    [report, search, team, status, scope, servicePolicy],
   );
+  function showHistory(filters: HistoryFilters = {}) {
+    setScope(filters.scope || "all");
+    setTeam(filters.team || "");
+    setStatus(filters.outcome || "");
+    setSearch("");
+    setPage(1);
+    setTab("queue");
+    setQueueFocus((value) => value + 1);
+  }
   function mark(id: string) {
     const next = reviewed.includes(id)
       ? reviewed.filter((x) => x !== id)
@@ -290,7 +306,7 @@ export default function RenderApp() {
           onClick={() => setTab("queue")}
         >
           <ShieldCheck size={18} />
-          预检工作台<span>{p.intercepted}</span>
+          任务结果与预检<span>{m.source.uniqueJobs}</span>
         </button>
         <button
           className={tab === "evidence" ? "active" : ""}
@@ -301,7 +317,10 @@ export default function RenderApp() {
         </button>
         <button
           className={tab === "service" ? "active" : ""}
-          onClick={() => setTab("service")}
+          onClick={() => {
+            setTab("service");
+            window.scrollTo({ top: 0 });
+          }}
         >
           <SlidersHorizontal size={18} />
           业务保障与权重
@@ -324,7 +343,7 @@ export default function RenderApp() {
           <span>
             工作空间 <b>/</b>{" "}
             {tab === "queue"
-              ? "预检工作台"
+              ? "任务结果与预检"
               : tab === "service"
                 ? "业务保障与权重"
                 : "回放证据"}
@@ -342,7 +361,7 @@ export default function RenderApp() {
               <span className="rc-eyebrow">RENDER RELIABILITY</span>
               <h1>
                 {tab === "queue"
-                  ? "把返工留在提交之前"
+                  ? "先看任务结果，再安排核查"
                   : tab === "service"
                     ? "重要项目，提前有人跟进"
                     : "每一个判断，都能回到数据"}
@@ -350,7 +369,7 @@ export default function RenderApp() {
               </h1>
               <p>
                 {tab === "queue"
-                  ? "优先核查资产同步间隔较长的任务，给设计师一条明确的处理路径。"
+                  ? "提前识别失败风险，投入人工定位与处理问题，验证是否减少失败和返工。"
                   : tab === "service"
                     ? "按业务重要性安排关注顺序，用独立的无结果时限保障 KA 与定制项目。"
                     : "按唯一任务核算收益与成本，保留误拦、未知结果和适用边界。"}
@@ -378,22 +397,26 @@ export default function RenderApp() {
                   label="纳入分析的唯一任务"
                   value={n(m.source.uniqueJobs)}
                   detail={`原始 ${m.source.rawRows} 行 · 合并 ${m.source.duplicatesRemoved} 行重复`}
+                  onClick={() => showHistory()}
                 />
                 <Kpi
-                  label="已知结果的失败率"
-                  value={pct(m.outcomes.failureRate)}
-                  detail={`${m.outcomes.failed} / ${m.outcomes.known} · 另有 ${m.outcomes.unknown} 个未回传`}
-                />
-                <Kpi
-                  label="规则命中的历史失败"
-                  value={`${p.caughtFailures} / ${m.outcomes.failed}`}
-                  detail={`覆盖 ${pct(p.recall)} 的已知失败`}
-                />
-                <Kpi
-                  label="50% 有效情景净节省"
-                  value={`${n(p.netHoursAtHalfEffect)} 工时`}
-                  detail="扣除所有拦截成本 · 尚非实测收益"
+                  label="历史渲染成功"
+                  value={`${n(m.outcomes.succeeded)} 个`}
+                  detail="已返回成功结果 · 点击查看原始任务"
+                  onClick={() => showHistory({ outcome: "success" })}
                   accent
+                />
+                <Kpi
+                  label="历史渲染失败"
+                  value={`${n(m.outcomes.failed)} 个`}
+                  detail={`已知结果失败率 ${pct(m.outcomes.failureRate)} · 点击查看`}
+                  onClick={() => showHistory({ outcome: "failure" })}
+                />
+                <Kpi
+                  label="历史结果未回传"
+                  value={`${n(m.outcomes.unknown)} 个`}
+                  detail="不能当作成功或失败 · 点击查看原始任务"
+                  onClick={() => showHistory({ outcome: "unknown" })}
                 />
               </section>
             </>
@@ -403,10 +426,14 @@ export default function RenderApp() {
               policy={servicePolicy}
               onChange={setServicePolicy}
               teams={m.byTeam}
-              onShowQueue={() => setTab("queue")}
+              effect={effect}
+              onEffectChange={setEffect}
+              costs={m.costs}
+              onShowQueue={showHistory}
             />
           ) : tab === "queue" ? (
             <>
+              <RuleOutcomeMatrix groups={m.byTeam} onShowQueue={showHistory} />
               <div className="rc-two-col">
                 <section className="rc-panel rc-checker">
                   <div className="rc-panel-heading">
@@ -499,14 +526,19 @@ export default function RenderApp() {
                   </ol>
                 </section>
               </div>
-              <section className="rc-panel rc-queue">
+              <section className="rc-panel rc-queue" id="historical-tasks">
                 <div className="rc-panel-heading">
                   <div>
                     <h2>
-                      历史核查清单 <span>{queue.length}</span>
+                      {scope === "hits"
+                        ? "同步规则命中任务"
+                        : scope === "misses"
+                          ? "未命中同步规则的任务"
+                          : "全部历史任务"}{" "}
+                      <span>{queue.length}</span>
                     </h2>
                     <p>
-                      历史回放中触发规则的任务；“已核查”仅为本机标记，不表示资产已修复。
+                      成功、失败、未回传来自原始数据；权重不改变历史结果。“已核查”仅为本机标记，不表示已修复。
                     </p>
                   </div>
                   <button
@@ -527,6 +559,17 @@ export default function RenderApp() {
                     />
                   </label>
                   <select
+                    aria-label="任务数据范围"
+                    value={scope}
+                    onChange={(event) =>
+                      setScope(event.target.value as "all" | "hits" | "misses")
+                    }
+                  >
+                    <option value="all">全部历史任务</option>
+                    <option value="hits">仅同步规则命中</option>
+                    <option value="misses">仅未命中同步规则</option>
+                  </select>
+                  <select
                     aria-label="团队筛选"
                     value={team}
                     onChange={(e) => setTeam(e.target.value)}
@@ -539,16 +582,18 @@ export default function RenderApp() {
                   <select
                     aria-label="历史结果筛选"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) =>
+                      setStatus(e.target.value as HistoryFilters["outcome"])
+                    }
                   >
                     <option value="">全部历史结果</option>
                     <option value="failure">失败</option>
-                    <option value="success">成功（误拦）</option>
+                    <option value="success">成功</option>
                     <option value="unknown">未回传</option>
                   </select>
                 </div>
                 <div className="rc-table-wrap">
-                  <table>
+                  <table aria-label="历史渲染任务">
                     <thead>
                       <tr>
                         <th>任务 / 场景</th>
@@ -581,6 +626,9 @@ export default function RenderApp() {
                           <td>{date(r.created_at)}</td>
                           <td>
                             <span className="rc-age">{r.lagMinutes} 分钟</span>
+                            <small>
+                              {r.intercept ? "命中同步规则" : "未命中同步规则"}
+                            </small>
                           </td>
                           <td>
                             <span className={`rc-outcome ${r.outcome}`}>
@@ -597,8 +645,10 @@ export default function RenderApp() {
                                   <Check size={13} />
                                   已核查
                                 </>
-                              ) : (
+                              ) : r.intercept ? (
                                 "待核查"
+                              ) : (
+                                "未标记"
                               )}
                             </button>
                           </td>
@@ -1070,17 +1120,20 @@ function Kpi({
   value,
   detail,
   accent = false,
+  onClick,
 }: {
   label: string;
   value: string;
   detail: string;
   accent?: boolean;
+  onClick?: () => void;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className={`rc-kpi ${accent ? "accent" : ""}`}>
+    <Tag className={`rc-kpi ${accent ? "accent" : ""}`} onClick={onClick}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
-    </div>
+    </Tag>
   );
 }

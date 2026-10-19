@@ -292,6 +292,7 @@ select:focus-visible {
   margin-bottom: 22px;
 }
 .rc-kpi {
+  text-align: left;
   background: #fff;
   border: 1px solid #e5eaed;
   border-radius: 9px;
@@ -476,6 +477,7 @@ select:focus-visible {
 }
 .rc-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   padding: 0 22px 18px;
@@ -543,6 +545,220 @@ select:focus-visible {
 
 .rc-service {
   font-size: 13px;
+}
+.rc-live-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.rc-outcome-matrix .rc-panel-heading select {
+  border: 1px solid #dbe5df;
+  border-radius: 6px;
+  background: #fff;
+  color: #4f6b5b;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.rc-outcome-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.rc-outcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid #dce6df;
+  background: #f4f8f5;
+  color: #3b7655;
+}
+.rc-outcome-card > span {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rc-outcome-card strong {
+  font-size: 29px;
+}
+.rc-outcome-card strong small {
+  font-size: 12px;
+  font-weight: 400;
+}
+.rc-outcome-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.9;
+}
+.rc-outcome-card > small {
+  font-size: 10px;
+}
+.rc-outcome-card.missed {
+  color: #a15240;
+  background: #fff3ee;
+  border-color: #ecd9d0;
+}
+.rc-outcome-card.rescue {
+  color: #436a8a;
+  background: #f0f6fb;
+  border-color: #d5e3ed;
+}
+.rc-outcome-card.extra {
+  color: #8a7442;
+  background: #faf7ee;
+  border-color: #e8e1d1;
+}
+.rc-outcome-card:hover {
+  filter: brightness(0.98);
+}
+.rc-matrix-unknown {
+  color: #7a806f;
+  font-size: 11px;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+.rc-matrix-unknown button {
+  background: transparent;
+  color: #4b715e;
+  padding: 3px;
+  text-decoration: underline;
+}
+@media (max-width: 600px) {
+  .rc-outcome-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.rc-live-cards > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 13px;
+  background: #f4f8f5;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+}
+.rc-live-cards span,
+.rc-team-impact span {
+  font-size: 11px;
+  color: #607568;
+}
+.rc-live-cards strong {
+  font-size: 24px;
+  color: #286d54;
+}
+.rc-live-cards small,
+.rc-team-feedback > small {
+  color: #748479;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.rc-live-facts {
+  color: #63796b;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.rc-effect-control {
+  display: block;
+  padding: 16px;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+  background: #fbfdfb;
+}
+.rc-effect-control > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+.rc-effect-control strong {
+  color: #267b66;
+  white-space: nowrap;
+}
+.rc-effect-control small {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #708375;
+}
+.rc-team-feedback {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f7faf8;
+  border: 1px solid #e0e9e3;
+}
+.rc-outcome-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 9px 0 0;
+}
+.rc-outcome-buttons button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 1px solid #cfe4d8;
+  border-radius: 6px;
+  background: #edf6f0;
+  color: #2b7450;
+  font-size: 11px;
+  padding: 8px 10px;
+}
+.rc-outcome-buttons button strong {
+  font-size: 17px;
+}
+.rc-outcome-buttons button.failure {
+  color: #a15035;
+  background: #fff1eb;
+  border-color: #efd9cd;
+}
+.rc-outcome-buttons button.unknown {
+  color: #786d48;
+  background: #f8f5e9;
+  border-color: #e6e0cb;
+}
+.rc-outcome-buttons button:hover {
+  filter: brightness(0.97);
+}
+.rc-team-impact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  margin: 14px 0;
+}
+.rc-team-impact > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rc-team-impact strong {
+  color: #2e6e51;
+  font-size: 20px;
+}
+.rc-team-impact .rc-negative-value {
+  color: #a3533c;
+}
+.rc-team-feedback .rc-policy-link {
+  margin-top: 10px;
+}
+.rc-impact-formula {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1200px) {
+  .rc-live-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .rc-live-cards,
+  .rc-team-impact {
+    grid-template-columns: 1fr;
+  }
 }
 .rc-service-intro {
   display: flex;
