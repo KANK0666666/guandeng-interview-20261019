@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import express from "express";
 import { loadTask } from "./task.mjs";
+import { loadRender } from "./render.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const production = process.argv.includes("--production");
@@ -21,6 +22,9 @@ try {
 const app = createApp({
   directory: process.env.DATA_DIR || resolve(root, ".data"),
   task,
+  render: existsSync(resolve(root, "render.config.json"))
+    ? loadRender(root)
+    : null,
 });
 const port = Number(process.env.PORT || 4317);
 const host = process.env.HOST || "127.0.0.1";

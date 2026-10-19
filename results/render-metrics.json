@@ -1,0 +1,3065 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "path": "data/render_jobs.csv",
+    "sha256": "f7674deda7ae2f49cd878073083550acd7e82d765e8675fa694736485cd4b658",
+    "rawRows": 1005,
+    "rawUnknown": 55,
+    "uniqueJobs": 957,
+    "duplicatesRemoved": 48,
+    "duplicateJobs": 48,
+    "conflictingJobs": 0,
+    "invalidTimes": 0
+  },
+  "units": {
+    "time": "先按时区转为同一时刻，分钟差；按北京时间自然日划分",
+    "gpu": "沿用 gpu_mem_free_mb 的 MB，不擅自换成 GB",
+    "polygons": "沿用原始面数，不假定千面/万面",
+    "hours": "题目给定的工时计量，非本项目测得"
+  },
+  "featureRanges": {
+    "lagMinutes": {
+      "min": 0,
+      "max": 70
+    },
+    "memoryMb": {
+      "min": 0,
+      "max": 30
+    },
+    "polygons": {
+      "min": 7,
+      "max": 108
+    }
+  },
+  "costs": {
+    "crash": 120,
+    "intercept": 20
+  },
+  "outcomes": {
+    "jobs": 957,
+    "failed": 134,
+    "succeeded": 772,
+    "unknown": 51,
+    "known": 906,
+    "failureRate": 0.1479028697571744,
+    "failureRateLower": 0.1400208986415883,
+    "failureRateUpper": 0.19331243469174503
+  },
+  "selectedRule": {
+    "id": "lag-20",
+    "label": "同步间隔 ≥ 20 分钟",
+    "lagMinutes": 20,
+    "usesOutcome": false,
+    "action": "先核对资产版本并同步，完成后重新预检；每个唯一 job_id 最多计一次拦截成本。"
+  },
+  "split": {
+    "trainThrough": "2026-09-05",
+    "validationFrom": "2026-09-06",
+    "caveat": "先探索过全量分布，再按前5天选择规则、后2天做时间复核；不是严格未见的盲测。"
+  },
+  "train": {
+    "jobs": 688,
+    "failed": 93,
+    "succeeded": 559,
+    "unknown": 36,
+    "known": 652,
+    "failureRate": 0.14263803680981596,
+    "intercepted": 196,
+    "caughtFailures": 81,
+    "falseInterceptions": 101,
+    "interceptedUnknown": 14,
+    "missedFailures": 12,
+    "knownPrecision": 0.44505494505494503,
+    "recall": 0.8709677419354839,
+    "interceptCost": 3920,
+    "baselineKnownCrashHours": 11160,
+    "netHoursAtFullEffect": 5800,
+    "netHoursAtHalfEffect": 940,
+    "breakEvenEffectiveness": 0.40329218106995884,
+    "sensitivity": [
+      {
+        "effectiveness": 0,
+        "netHours": -3920
+      },
+      {
+        "effectiveness": 0.25,
+        "netHours": -1490
+      },
+      {
+        "effectiveness": 0.5,
+        "netHours": 940
+      },
+      {
+        "effectiveness": 0.75,
+        "netHours": 3370
+      },
+      {
+        "effectiveness": 1,
+        "netHours": 5800
+      }
+    ]
+  },
+  "validation": {
+    "jobs": 269,
+    "failed": 41,
+    "succeeded": 213,
+    "unknown": 15,
+    "known": 254,
+    "failureRate": 0.16141732283464566,
+    "intercepted": 76,
+    "caughtFailures": 31,
+    "falseInterceptions": 45,
+    "interceptedUnknown": 0,
+    "missedFailures": 10,
+    "knownPrecision": 0.40789473684210525,
+    "recall": 0.7560975609756098,
+    "interceptCost": 1520,
+    "baselineKnownCrashHours": 4920,
+    "netHoursAtFullEffect": 2200,
+    "netHoursAtHalfEffect": 340,
+    "breakEvenEffectiveness": 0.40860215053763443,
+    "sensitivity": [
+      {
+        "effectiveness": 0,
+        "netHours": -1520
+      },
+      {
+        "effectiveness": 0.25,
+        "netHours": -590
+      },
+      {
+        "effectiveness": 0.5,
+        "netHours": 340
+      },
+      {
+        "effectiveness": 0.75,
+        "netHours": 1270
+      },
+      {
+        "effectiveness": 1,
+        "netHours": 2200
+      }
+    ]
+  },
+  "all": {
+    "jobs": 957,
+    "failed": 134,
+    "succeeded": 772,
+    "unknown": 51,
+    "known": 906,
+    "failureRate": 0.1479028697571744,
+    "intercepted": 272,
+    "caughtFailures": 112,
+    "falseInterceptions": 146,
+    "interceptedUnknown": 14,
+    "missedFailures": 22,
+    "knownPrecision": 0.43410852713178294,
+    "recall": 0.835820895522388,
+    "interceptCost": 5440,
+    "baselineKnownCrashHours": 16080,
+    "netHoursAtFullEffect": 8000,
+    "netHoursAtHalfEffect": 1280,
+    "breakEvenEffectiveness": 0.40476190476190477,
+    "sensitivity": [
+      {
+        "effectiveness": 0,
+        "netHours": -5440
+      },
+      {
+        "effectiveness": 0.25,
+        "netHours": -2080
+      },
+      {
+        "effectiveness": 0.5,
+        "netHours": 1280
+      },
+      {
+        "effectiveness": 0.75,
+        "netHours": 4640
+      },
+      {
+        "effectiveness": 1,
+        "netHours": 8000
+      }
+    ]
+  },
+  "baselines": [
+    {
+      "id": "none",
+      "label": "不拦截",
+      "all": {
+        "jobs": 957,
+        "failed": 134,
+        "succeeded": 772,
+        "unknown": 51,
+        "known": 906,
+        "failureRate": 0.1479028697571744,
+        "intercepted": 0,
+        "caughtFailures": 0,
+        "falseInterceptions": 0,
+        "interceptedUnknown": 0,
+        "missedFailures": 134,
+        "knownPrecision": null,
+        "recall": 0,
+        "interceptCost": 0,
+        "baselineKnownCrashHours": 16080,
+        "netHoursAtFullEffect": 0,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": null,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 0
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 0,
+        "caughtFailures": 0,
+        "falseInterceptions": 0,
+        "interceptedUnknown": 0,
+        "missedFailures": 41,
+        "knownPrecision": null,
+        "recall": 0,
+        "interceptCost": 0,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 0,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": null,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "all",
+      "label": "全部拦截",
+      "all": {
+        "jobs": 957,
+        "failed": 134,
+        "succeeded": 772,
+        "unknown": 51,
+        "known": 906,
+        "failureRate": 0.1479028697571744,
+        "intercepted": 957,
+        "caughtFailures": 134,
+        "falseInterceptions": 772,
+        "interceptedUnknown": 51,
+        "missedFailures": 0,
+        "knownPrecision": 0.1479028697571744,
+        "recall": 1,
+        "interceptCost": 19140,
+        "baselineKnownCrashHours": 16080,
+        "netHoursAtFullEffect": -3060,
+        "netHoursAtHalfEffect": -11100,
+        "breakEvenEffectiveness": 1.1902985074626866,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -19140
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -15120
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -11100
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -7080
+          },
+          {
+            "effectiveness": 1,
+            "netHours": -3060
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 269,
+        "caughtFailures": 41,
+        "falseInterceptions": 213,
+        "interceptedUnknown": 15,
+        "missedFailures": 0,
+        "knownPrecision": 0.16141732283464566,
+        "recall": 1,
+        "interceptCost": 5380,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": -460,
+        "netHoursAtHalfEffect": -2920,
+        "breakEvenEffectiveness": 1.0934959349593496,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5380
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -4150
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -2920
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -1690
+          },
+          {
+            "effectiveness": 1,
+            "netHours": -460
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-3",
+      "label": "显存 ≤ 3 MB",
+      "all": {
+        "jobs": 957,
+        "failed": 134,
+        "succeeded": 772,
+        "unknown": 51,
+        "known": 906,
+        "failureRate": 0.1479028697571744,
+        "intercepted": 127,
+        "caughtFailures": 34,
+        "falseInterceptions": 90,
+        "interceptedUnknown": 3,
+        "missedFailures": 100,
+        "knownPrecision": 0.27419354838709675,
+        "recall": 0.2537313432835821,
+        "interceptCost": 2540,
+        "baselineKnownCrashHours": 16080,
+        "netHoursAtFullEffect": 1540,
+        "netHoursAtHalfEffect": -500,
+        "breakEvenEffectiveness": 0.6225490196078431,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2540
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1520
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -500
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 520
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1540
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 34,
+        "caughtFailures": 12,
+        "falseInterceptions": 20,
+        "interceptedUnknown": 2,
+        "missedFailures": 29,
+        "knownPrecision": 0.375,
+        "recall": 0.2926829268292683,
+        "interceptCost": 680,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 760,
+        "netHoursAtHalfEffect": 40,
+        "breakEvenEffectiveness": 0.4722222222222222,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -680
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -320
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 40
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 400
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 760
+          }
+        ]
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "lag-20",
+      "label": "同步间隔 ≥ 20 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 196,
+        "caughtFailures": 81,
+        "falseInterceptions": 101,
+        "interceptedUnknown": 14,
+        "missedFailures": 12,
+        "knownPrecision": 0.44505494505494503,
+        "recall": 0.8709677419354839,
+        "interceptCost": 3920,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5800,
+        "netHoursAtHalfEffect": 940,
+        "breakEvenEffectiveness": 0.40329218106995884,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -3920
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1490
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 940
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 3370
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5800
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-20-or-mem-0",
+      "label": "同步 ≥ 20 分钟 或 显存 ≤ 0 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 217,
+        "caughtFailures": 83,
+        "falseInterceptions": 120,
+        "interceptedUnknown": 14,
+        "missedFailures": 10,
+        "knownPrecision": 0.4088669950738916,
+        "recall": 0.8924731182795699,
+        "interceptCost": 4340,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5620,
+        "netHoursAtHalfEffect": 640,
+        "breakEvenEffectiveness": 0.4357429718875502,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4340
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1850
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 640
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 3130
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5620
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25",
+      "label": "同步间隔 ≥ 25 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 188,
+        "caughtFailures": 78,
+        "falseInterceptions": 96,
+        "interceptedUnknown": 14,
+        "missedFailures": 15,
+        "knownPrecision": 0.4482758620689655,
+        "recall": 0.8387096774193549,
+        "interceptCost": 3760,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5600,
+        "netHoursAtHalfEffect": 920,
+        "breakEvenEffectiveness": 0.4017094017094017,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -3760
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1420
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 920
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 3260
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5600
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25-or-mem-0",
+      "label": "同步 ≥ 25 分钟 或 显存 ≤ 0 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 209,
+        "caughtFailures": 80,
+        "falseInterceptions": 115,
+        "interceptedUnknown": 14,
+        "missedFailures": 13,
+        "knownPrecision": 0.41025641025641024,
+        "recall": 0.8602150537634409,
+        "interceptCost": 4180,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5420,
+        "netHoursAtHalfEffect": 620,
+        "breakEvenEffectiveness": 0.4354166666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4180
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1780
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 620
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 3020
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5420
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-20-or-mem-1",
+      "label": "同步 ≥ 20 分钟 或 显存 ≤ 1 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 229,
+        "caughtFailures": 83,
+        "falseInterceptions": 132,
+        "interceptedUnknown": 14,
+        "missedFailures": 10,
+        "knownPrecision": 0.386046511627907,
+        "recall": 0.8924731182795699,
+        "interceptCost": 4580,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5380,
+        "netHoursAtHalfEffect": 400,
+        "breakEvenEffectiveness": 0.4598393574297189,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4580
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2090
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 400
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2890
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5380
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-20-or-mem-3",
+      "label": "同步 ≥ 20 分钟 或 显存 ≤ 3 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 266,
+        "caughtFailures": 89,
+        "falseInterceptions": 162,
+        "interceptedUnknown": 15,
+        "missedFailures": 4,
+        "knownPrecision": 0.3545816733067729,
+        "recall": 0.956989247311828,
+        "interceptCost": 5320,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5360,
+        "netHoursAtHalfEffect": 20,
+        "breakEvenEffectiveness": 0.49812734082397003,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5320
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2650
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2690
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5360
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-20-or-mem-2",
+      "label": "同步 ≥ 20 分钟 或 显存 ≤ 2 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 245,
+        "caughtFailures": 85,
+        "falseInterceptions": 146,
+        "interceptedUnknown": 14,
+        "missedFailures": 8,
+        "knownPrecision": 0.36796536796536794,
+        "recall": 0.9139784946236559,
+        "interceptCost": 4900,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5300,
+        "netHoursAtHalfEffect": 200,
+        "breakEvenEffectiveness": 0.4803921568627451,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4900
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2350
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2750
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5300
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25-or-mem-1",
+      "label": "同步 ≥ 25 分钟 或 显存 ≤ 1 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 222,
+        "caughtFailures": 81,
+        "falseInterceptions": 127,
+        "interceptedUnknown": 14,
+        "missedFailures": 12,
+        "knownPrecision": 0.3894230769230769,
+        "recall": 0.8709677419354839,
+        "interceptCost": 4440,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5280,
+        "netHoursAtHalfEffect": 420,
+        "breakEvenEffectiveness": 0.4567901234567901,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4440
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2010
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 420
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2850
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5280
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25-or-mem-3",
+      "label": "同步 ≥ 25 分钟 或 显存 ≤ 3 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 259,
+        "caughtFailures": 87,
+        "falseInterceptions": 157,
+        "interceptedUnknown": 15,
+        "missedFailures": 6,
+        "knownPrecision": 0.35655737704918034,
+        "recall": 0.9354838709677419,
+        "interceptCost": 5180,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5260,
+        "netHoursAtHalfEffect": 40,
+        "breakEvenEffectiveness": 0.49616858237547895,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5180
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2570
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 40
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2650
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5260
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25-or-mem-2",
+      "label": "同步 ≥ 25 分钟 或 显存 ≤ 2 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 238,
+        "caughtFailures": 83,
+        "falseInterceptions": 141,
+        "interceptedUnknown": 14,
+        "missedFailures": 10,
+        "knownPrecision": 0.3705357142857143,
+        "recall": 0.8924731182795699,
+        "interceptCost": 4760,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5200,
+        "netHoursAtHalfEffect": 220,
+        "breakEvenEffectiveness": 0.4779116465863454,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4760
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2270
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2710
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5200
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-20-or-mem-5",
+      "label": "同步 ≥ 20 分钟 或 显存 ≤ 5 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 287,
+        "caughtFailures": 91,
+        "falseInterceptions": 180,
+        "interceptedUnknown": 16,
+        "missedFailures": 2,
+        "knownPrecision": 0.33579335793357934,
+        "recall": 0.978494623655914,
+        "interceptCost": 5740,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5180,
+        "netHoursAtHalfEffect": -280,
+        "breakEvenEffectiveness": 0.5256410256410257,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5740
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -3010
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -280
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2450
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5180
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-25-or-mem-5",
+      "label": "同步 ≥ 25 分钟 或 显存 ≤ 5 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 280,
+        "caughtFailures": 89,
+        "falseInterceptions": 175,
+        "interceptedUnknown": 16,
+        "missedFailures": 4,
+        "knownPrecision": 0.3371212121212121,
+        "recall": 0.956989247311828,
+        "interceptCost": 5600,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5080,
+        "netHoursAtHalfEffect": -260,
+        "breakEvenEffectiveness": 0.5243445692883895,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5600
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2930
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -260
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2410
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5080
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30",
+      "label": "同步间隔 ≥ 30 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 168,
+        "caughtFailures": 70,
+        "falseInterceptions": 86,
+        "interceptedUnknown": 12,
+        "missedFailures": 23,
+        "knownPrecision": 0.44871794871794873,
+        "recall": 0.7526881720430108,
+        "interceptCost": 3360,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 5040,
+        "netHoursAtHalfEffect": 840,
+        "breakEvenEffectiveness": 0.4,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -3360
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1260
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 840
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2940
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 5040
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30-or-mem-0",
+      "label": "同步 ≥ 30 分钟 或 显存 ≤ 0 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 191,
+        "caughtFailures": 73,
+        "falseInterceptions": 106,
+        "interceptedUnknown": 12,
+        "missedFailures": 20,
+        "knownPrecision": 0.40782122905027934,
+        "recall": 0.7849462365591398,
+        "interceptCost": 3820,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 4940,
+        "netHoursAtHalfEffect": 560,
+        "breakEvenEffectiveness": 0.4360730593607306,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -3820
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1630
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 560
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2750
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 4940
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30-or-mem-1",
+      "label": "同步 ≥ 30 分钟 或 显存 ≤ 1 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 206,
+        "caughtFailures": 75,
+        "falseInterceptions": 119,
+        "interceptedUnknown": 12,
+        "missedFailures": 18,
+        "knownPrecision": 0.3865979381443299,
+        "recall": 0.8064516129032258,
+        "interceptCost": 4120,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 4880,
+        "netHoursAtHalfEffect": 380,
+        "breakEvenEffectiveness": 0.4577777777777778,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4120
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1870
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 380
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2630
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 4880
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30-or-mem-3",
+      "label": "同步 ≥ 30 分钟 或 显存 ≤ 3 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 243,
+        "caughtFailures": 81,
+        "falseInterceptions": 149,
+        "interceptedUnknown": 13,
+        "missedFailures": 12,
+        "knownPrecision": 0.3521739130434783,
+        "recall": 0.8709677419354839,
+        "interceptCost": 4860,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 4860,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": 0.5,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4860
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2430
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2430
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 4860
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30-or-mem-2",
+      "label": "同步 ≥ 30 分钟 或 显存 ≤ 2 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 222,
+        "caughtFailures": 77,
+        "falseInterceptions": 133,
+        "interceptedUnknown": 12,
+        "missedFailures": 16,
+        "knownPrecision": 0.36666666666666664,
+        "recall": 0.8279569892473119,
+        "interceptCost": 4440,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 4800,
+        "netHoursAtHalfEffect": 180,
+        "breakEvenEffectiveness": 0.4805194805194805,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4440
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2130
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 180
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2490
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 4800
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-30-or-mem-5",
+      "label": "同步 ≥ 30 分钟 或 显存 ≤ 5 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 266,
+        "caughtFailures": 83,
+        "falseInterceptions": 169,
+        "interceptedUnknown": 14,
+        "missedFailures": 10,
+        "knownPrecision": 0.32936507936507936,
+        "recall": 0.8924731182795699,
+        "interceptCost": 5320,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 4640,
+        "netHoursAtHalfEffect": -340,
+        "breakEvenEffectiveness": 0.5341365461847389,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5320
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2830
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 2150
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 4640
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15",
+      "label": "同步间隔 ≥ 15 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 293,
+        "caughtFailures": 82,
+        "falseInterceptions": 191,
+        "interceptedUnknown": 20,
+        "missedFailures": 11,
+        "knownPrecision": 0.30036630036630035,
+        "recall": 0.8817204301075269,
+        "interceptCost": 5860,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3980,
+        "netHoursAtHalfEffect": -940,
+        "breakEvenEffectiveness": 0.5955284552845529,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5860
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -3400
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -940
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1520
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3980
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15-or-mem-0",
+      "label": "同步 ≥ 15 分钟 或 显存 ≤ 0 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 310,
+        "caughtFailures": 83,
+        "falseInterceptions": 207,
+        "interceptedUnknown": 20,
+        "missedFailures": 10,
+        "knownPrecision": 0.28620689655172415,
+        "recall": 0.8924731182795699,
+        "interceptCost": 6200,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3760,
+        "netHoursAtHalfEffect": -1220,
+        "breakEvenEffectiveness": 0.6224899598393574,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -6200
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -3710
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1270
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3760
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15-or-mem-3",
+      "label": "同步 ≥ 15 分钟 或 显存 ≤ 3 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 350,
+        "caughtFailures": 89,
+        "falseInterceptions": 240,
+        "interceptedUnknown": 21,
+        "missedFailures": 4,
+        "knownPrecision": 0.270516717325228,
+        "recall": 0.956989247311828,
+        "interceptCost": 7000,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3680,
+        "netHoursAtHalfEffect": -1660,
+        "breakEvenEffectiveness": 0.6554307116104869,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -7000
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -4330
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1660
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1010
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3680
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15-or-mem-1",
+      "label": "同步 ≥ 15 分钟 或 显存 ≤ 1 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 318,
+        "caughtFailures": 83,
+        "falseInterceptions": 215,
+        "interceptedUnknown": 20,
+        "missedFailures": 10,
+        "knownPrecision": 0.2785234899328859,
+        "recall": 0.8924731182795699,
+        "interceptCost": 6360,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3600,
+        "netHoursAtHalfEffect": -1380,
+        "breakEvenEffectiveness": 0.6385542168674698,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -6360
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -3870
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1380
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1110
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3600
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15-or-mem-5",
+      "label": "同步 ≥ 15 分钟 或 显存 ≤ 5 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 367,
+        "caughtFailures": 91,
+        "falseInterceptions": 254,
+        "interceptedUnknown": 22,
+        "missedFailures": 2,
+        "knownPrecision": 0.263768115942029,
+        "recall": 0.978494623655914,
+        "interceptCost": 7340,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3580,
+        "netHoursAtHalfEffect": -1880,
+        "breakEvenEffectiveness": 0.6721611721611722,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -7340
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -4610
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1880
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 850
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3580
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-15-or-mem-2",
+      "label": "同步 ≥ 15 分钟 或 显存 ≤ 2 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 333,
+        "caughtFailures": 85,
+        "falseInterceptions": 228,
+        "interceptedUnknown": 20,
+        "missedFailures": 8,
+        "knownPrecision": 0.2715654952076677,
+        "recall": 0.9139784946236559,
+        "interceptCost": 6660,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3540,
+        "netHoursAtHalfEffect": -1560,
+        "breakEvenEffectiveness": 0.6529411764705882,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -6660
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -4110
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1560
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 990
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3540
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-40",
+      "label": "同步间隔 ≥ 40 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 119,
+        "caughtFailures": 45,
+        "falseInterceptions": 63,
+        "interceptedUnknown": 11,
+        "missedFailures": 48,
+        "knownPrecision": 0.4166666666666667,
+        "recall": 0.4838709677419355,
+        "interceptCost": 2380,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 3020,
+        "netHoursAtHalfEffect": 320,
+        "breakEvenEffectiveness": 0.44074074074074077,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2380
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1030
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 320
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1670
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 3020
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-10",
+      "label": "同步间隔 ≥ 10 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 416,
+        "caughtFailures": 85,
+        "falseInterceptions": 305,
+        "interceptedUnknown": 26,
+        "missedFailures": 8,
+        "knownPrecision": 0.21794871794871795,
+        "recall": 0.9139784946236559,
+        "interceptCost": 8320,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 1880,
+        "netHoursAtHalfEffect": -3220,
+        "breakEvenEffectiveness": 0.8156862745098039,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -8320
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -5770
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -3220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -670
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1880
+          }
+        ]
+      }
+    },
+    {
+      "id": "lag-60",
+      "label": "同步间隔 ≥ 60 分钟",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 50,
+        "caughtFailures": 17,
+        "falseInterceptions": 29,
+        "interceptedUnknown": 4,
+        "missedFailures": 76,
+        "knownPrecision": 0.3695652173913043,
+        "recall": 0.1827956989247312,
+        "interceptCost": 1000,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 1040,
+        "netHoursAtHalfEffect": 20,
+        "breakEvenEffectiveness": 0.49019607843137253,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1000
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -490
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 530
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1040
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-5",
+      "label": "显存 ≤ 5 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 134,
+        "caughtFailures": 30,
+        "falseInterceptions": 98,
+        "interceptedUnknown": 6,
+        "missedFailures": 63,
+        "knownPrecision": 0.234375,
+        "recall": 0.3225806451612903,
+        "interceptCost": 2680,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 920,
+        "netHoursAtHalfEffect": -880,
+        "breakEvenEffectiveness": 0.7444444444444445,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2680
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1780
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -880
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 920
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-3",
+      "label": "显存 ≤ 3 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 93,
+        "caughtFailures": 22,
+        "falseInterceptions": 70,
+        "interceptedUnknown": 1,
+        "missedFailures": 71,
+        "knownPrecision": 0.2391304347826087,
+        "recall": 0.23655913978494625,
+        "interceptCost": 1860,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 780,
+        "netHoursAtHalfEffect": -540,
+        "breakEvenEffectiveness": 0.7045454545454546,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1860
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1200
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -540
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 120
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 780
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-8",
+      "label": "显存 ≤ 8 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 203,
+        "caughtFailures": 40,
+        "falseInterceptions": 156,
+        "interceptedUnknown": 7,
+        "missedFailures": 53,
+        "knownPrecision": 0.20408163265306123,
+        "recall": 0.43010752688172044,
+        "interceptCost": 4060,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 740,
+        "netHoursAtHalfEffect": -1660,
+        "breakEvenEffectiveness": 0.8458333333333333,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -4060
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2860
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1660
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -460
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 740
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-1",
+      "label": "显存 ≤ 1 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 45,
+        "caughtFailures": 10,
+        "falseInterceptions": 35,
+        "interceptedUnknown": 0,
+        "missedFailures": 83,
+        "knownPrecision": 0.2222222222222222,
+        "recall": 0.10752688172043011,
+        "interceptCost": 900,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 300,
+        "netHoursAtHalfEffect": -300,
+        "breakEvenEffectiveness": 0.75,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -900
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -600
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -300
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 300
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-2",
+      "label": "显存 ≤ 2 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 63,
+        "caughtFailures": 12,
+        "falseInterceptions": 51,
+        "interceptedUnknown": 0,
+        "missedFailures": 81,
+        "knownPrecision": 0.19047619047619047,
+        "recall": 0.12903225806451613,
+        "interceptCost": 1260,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 180,
+        "netHoursAtHalfEffect": -540,
+        "breakEvenEffectiveness": 0.875,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1260
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -900
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -540
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -180
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 180
+          }
+        ]
+      }
+    },
+    {
+      "id": "mem-0",
+      "label": "显存 ≤ 0 MB",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 28,
+        "caughtFailures": 6,
+        "falseInterceptions": 22,
+        "interceptedUnknown": 0,
+        "missedFailures": 87,
+        "knownPrecision": 0.21428571428571427,
+        "recall": 0.06451612903225806,
+        "interceptCost": 560,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 160,
+        "netHoursAtHalfEffect": -200,
+        "breakEvenEffectiveness": 0.7777777777777778,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -560
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -380
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -20
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 160
+          }
+        ]
+      }
+    },
+    {
+      "id": "none",
+      "label": "不拦截",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 0,
+        "caughtFailures": 0,
+        "falseInterceptions": 0,
+        "interceptedUnknown": 0,
+        "missedFailures": 93,
+        "knownPrecision": null,
+        "recall": 0,
+        "interceptCost": 0,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 0,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": null,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "all",
+      "label": "全部拦截",
+      "train": {
+        "jobs": 688,
+        "failed": 93,
+        "succeeded": 559,
+        "unknown": 36,
+        "known": 652,
+        "failureRate": 0.14263803680981596,
+        "intercepted": 688,
+        "caughtFailures": 93,
+        "falseInterceptions": 559,
+        "interceptedUnknown": 36,
+        "missedFailures": 0,
+        "knownPrecision": 0.14263803680981596,
+        "recall": 1,
+        "interceptCost": 13760,
+        "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": -2600,
+        "netHoursAtHalfEffect": -8180,
+        "breakEvenEffectiveness": 1.2329749103942653,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -13760
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -10970
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -8180
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -5390
+          },
+          {
+            "effectiveness": 1,
+            "netHours": -2600
+          }
+        ]
+      }
+    }
+  ],
+  "lagGroups": [
+    {
+      "name": "同步间隔 < 20 分钟",
+      "jobs": 685,
+      "failed": 22,
+      "succeeded": 626,
+      "unknown": 37,
+      "known": 648,
+      "failureRate": 0.033950617283950615
+    },
+    {
+      "name": "同步间隔 ≥ 20 分钟",
+      "jobs": 272,
+      "failed": 112,
+      "succeeded": 146,
+      "unknown": 14,
+      "known": 258,
+      "failureRate": 0.43410852713178294
+    }
+  ],
+  "byTeam": [
+    {
+      "name": "KA大客户组",
+      "jobs": 250,
+      "failed": 38,
+      "succeeded": 200,
+      "unknown": 12,
+      "known": 238,
+      "failureRate": 0.15966386554621848,
+      "policy": {
+        "jobs": 250,
+        "failed": 38,
+        "succeeded": 200,
+        "unknown": 12,
+        "known": 238,
+        "failureRate": 0.15966386554621848,
+        "intercepted": 62,
+        "caughtFailures": 33,
+        "falseInterceptions": 25,
+        "interceptedUnknown": 4,
+        "missedFailures": 5,
+        "knownPrecision": 0.5689655172413793,
+        "recall": 0.868421052631579,
+        "interceptCost": 1240,
+        "baselineKnownCrashHours": 4560,
+        "netHoursAtFullEffect": 2720,
+        "netHoursAtHalfEffect": 740,
+        "breakEvenEffectiveness": 0.31313131313131315,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1240
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -250
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 740
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1730
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2720
+          }
+        ]
+      }
+    },
+    {
+      "name": "国内电商组",
+      "jobs": 245,
+      "failed": 35,
+      "succeeded": 198,
+      "unknown": 12,
+      "known": 233,
+      "failureRate": 0.15021459227467812,
+      "policy": {
+        "jobs": 245,
+        "failed": 35,
+        "succeeded": 198,
+        "unknown": 12,
+        "known": 233,
+        "failureRate": 0.15021459227467812,
+        "intercepted": 66,
+        "caughtFailures": 31,
+        "falseInterceptions": 31,
+        "interceptedUnknown": 4,
+        "missedFailures": 4,
+        "knownPrecision": 0.5,
+        "recall": 0.8857142857142857,
+        "interceptCost": 1320,
+        "baselineKnownCrashHours": 4200,
+        "netHoursAtFullEffect": 2400,
+        "netHoursAtHalfEffect": 540,
+        "breakEvenEffectiveness": 0.3548387096774194,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1320
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -390
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 540
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1470
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2400
+          }
+        ]
+      }
+    },
+    {
+      "name": "海外定制组",
+      "jobs": 233,
+      "failed": 25,
+      "succeeded": 192,
+      "unknown": 16,
+      "known": 217,
+      "failureRate": 0.1152073732718894,
+      "policy": {
+        "jobs": 233,
+        "failed": 25,
+        "succeeded": 192,
+        "unknown": 16,
+        "known": 217,
+        "failureRate": 0.1152073732718894,
+        "intercepted": 69,
+        "caughtFailures": 13,
+        "falseInterceptions": 55,
+        "interceptedUnknown": 1,
+        "missedFailures": 12,
+        "knownPrecision": 0.19117647058823528,
+        "recall": 0.52,
+        "interceptCost": 1380,
+        "baselineKnownCrashHours": 3000,
+        "netHoursAtFullEffect": 180,
+        "netHoursAtHalfEffect": -600,
+        "breakEvenEffectiveness": 0.8846153846153846,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1380
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -990
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -600
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -210
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 180
+          }
+        ]
+      }
+    },
+    {
+      "name": "生态服务商组",
+      "jobs": 229,
+      "failed": 36,
+      "succeeded": 182,
+      "unknown": 11,
+      "known": 218,
+      "failureRate": 0.1651376146788991,
+      "policy": {
+        "jobs": 229,
+        "failed": 36,
+        "succeeded": 182,
+        "unknown": 11,
+        "known": 218,
+        "failureRate": 0.1651376146788991,
+        "intercepted": 75,
+        "caughtFailures": 35,
+        "falseInterceptions": 35,
+        "interceptedUnknown": 5,
+        "missedFailures": 1,
+        "knownPrecision": 0.5,
+        "recall": 0.9722222222222222,
+        "interceptCost": 1500,
+        "baselineKnownCrashHours": 4320,
+        "netHoursAtFullEffect": 2700,
+        "netHoursAtHalfEffect": 600,
+        "breakEvenEffectiveness": 0.35714285714285715,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1500
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -450
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 600
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1650
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2700
+          }
+        ]
+      }
+    }
+  ],
+  "byScene": [
+    {
+      "name": "全屋定制",
+      "jobs": 109,
+      "failed": 19,
+      "succeeded": 86,
+      "unknown": 4,
+      "known": 105,
+      "failureRate": 0.18095238095238095,
+      "policy": {
+        "jobs": 109,
+        "failed": 19,
+        "succeeded": 86,
+        "unknown": 4,
+        "known": 105,
+        "failureRate": 0.18095238095238095,
+        "intercepted": 32,
+        "caughtFailures": 13,
+        "falseInterceptions": 19,
+        "interceptedUnknown": 0,
+        "missedFailures": 6,
+        "knownPrecision": 0.40625,
+        "recall": 0.6842105263157895,
+        "interceptCost": 640,
+        "baselineKnownCrashHours": 2280,
+        "netHoursAtFullEffect": 920,
+        "netHoursAtHalfEffect": 140,
+        "breakEvenEffectiveness": 0.41025641025641024,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -640
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -250
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 140
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 530
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 920
+          }
+        ]
+      }
+    },
+    {
+      "name": "卫浴建材",
+      "jobs": 118,
+      "failed": 18,
+      "succeeded": 94,
+      "unknown": 6,
+      "known": 112,
+      "failureRate": 0.16071428571428573,
+      "policy": {
+        "jobs": 118,
+        "failed": 18,
+        "succeeded": 94,
+        "unknown": 6,
+        "known": 112,
+        "failureRate": 0.16071428571428573,
+        "intercepted": 31,
+        "caughtFailures": 16,
+        "falseInterceptions": 13,
+        "interceptedUnknown": 2,
+        "missedFailures": 2,
+        "knownPrecision": 0.5517241379310345,
+        "recall": 0.8888888888888888,
+        "interceptCost": 620,
+        "baselineKnownCrashHours": 2160,
+        "netHoursAtFullEffect": 1300,
+        "netHoursAtHalfEffect": 340,
+        "breakEvenEffectiveness": 0.3229166666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -620
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -140
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 820
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1300
+          }
+        ]
+      }
+    },
+    {
+      "name": "大型动效",
+      "jobs": 103,
+      "failed": 14,
+      "succeeded": 80,
+      "unknown": 9,
+      "known": 94,
+      "failureRate": 0.14893617021276595,
+      "policy": {
+        "jobs": 103,
+        "failed": 14,
+        "succeeded": 80,
+        "unknown": 9,
+        "known": 94,
+        "failureRate": 0.14893617021276595,
+        "intercepted": 30,
+        "caughtFailures": 11,
+        "falseInterceptions": 16,
+        "interceptedUnknown": 3,
+        "missedFailures": 3,
+        "knownPrecision": 0.4074074074074074,
+        "recall": 0.7857142857142857,
+        "interceptCost": 600,
+        "baselineKnownCrashHours": 1680,
+        "netHoursAtFullEffect": 720,
+        "netHoursAtHalfEffect": 60,
+        "breakEvenEffectiveness": 0.45454545454545453,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -600
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -270
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 60
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 390
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 720
+          }
+        ]
+      }
+    },
+    {
+      "name": "实木柜体",
+      "jobs": 113,
+      "failed": 10,
+      "succeeded": 92,
+      "unknown": 11,
+      "known": 102,
+      "failureRate": 0.09803921568627451,
+      "policy": {
+        "jobs": 113,
+        "failed": 10,
+        "succeeded": 92,
+        "unknown": 11,
+        "known": 102,
+        "failureRate": 0.09803921568627451,
+        "intercepted": 32,
+        "caughtFailures": 9,
+        "falseInterceptions": 20,
+        "interceptedUnknown": 3,
+        "missedFailures": 1,
+        "knownPrecision": 0.3103448275862069,
+        "recall": 0.9,
+        "interceptCost": 640,
+        "baselineKnownCrashHours": 1200,
+        "netHoursAtFullEffect": 440,
+        "netHoursAtHalfEffect": -100,
+        "breakEvenEffectiveness": 0.5925925925925926,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -640
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -370
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -100
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 170
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 440
+          }
+        ]
+      }
+    },
+    {
+      "name": "灯具照明",
+      "jobs": 127,
+      "failed": 21,
+      "succeeded": 99,
+      "unknown": 7,
+      "known": 120,
+      "failureRate": 0.175,
+      "policy": {
+        "jobs": 127,
+        "failed": 21,
+        "succeeded": 99,
+        "unknown": 7,
+        "known": 120,
+        "failureRate": 0.175,
+        "intercepted": 47,
+        "caughtFailures": 19,
+        "falseInterceptions": 24,
+        "interceptedUnknown": 4,
+        "missedFailures": 2,
+        "knownPrecision": 0.4418604651162791,
+        "recall": 0.9047619047619048,
+        "interceptCost": 940,
+        "baselineKnownCrashHours": 2520,
+        "netHoursAtFullEffect": 1340,
+        "netHoursAtHalfEffect": 200,
+        "breakEvenEffectiveness": 0.41228070175438597,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -940
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -370
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 770
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1340
+          }
+        ]
+      }
+    },
+    {
+      "name": "软装布艺",
+      "jobs": 126,
+      "failed": 18,
+      "succeeded": 103,
+      "unknown": 5,
+      "known": 121,
+      "failureRate": 0.1487603305785124,
+      "policy": {
+        "jobs": 126,
+        "failed": 18,
+        "succeeded": 103,
+        "unknown": 5,
+        "known": 121,
+        "failureRate": 0.1487603305785124,
+        "intercepted": 39,
+        "caughtFailures": 16,
+        "falseInterceptions": 22,
+        "interceptedUnknown": 1,
+        "missedFailures": 2,
+        "knownPrecision": 0.42105263157894735,
+        "recall": 0.8888888888888888,
+        "interceptCost": 780,
+        "baselineKnownCrashHours": 2160,
+        "netHoursAtFullEffect": 1140,
+        "netHoursAtHalfEffect": 180,
+        "breakEvenEffectiveness": 0.40625,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -780
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -300
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 180
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 660
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1140
+          }
+        ]
+      }
+    },
+    {
+      "name": "金属五金",
+      "jobs": 135,
+      "failed": 22,
+      "succeeded": 107,
+      "unknown": 6,
+      "known": 129,
+      "failureRate": 0.17054263565891473,
+      "policy": {
+        "jobs": 135,
+        "failed": 22,
+        "succeeded": 107,
+        "unknown": 6,
+        "known": 129,
+        "failureRate": 0.17054263565891473,
+        "intercepted": 41,
+        "caughtFailures": 18,
+        "falseInterceptions": 22,
+        "interceptedUnknown": 1,
+        "missedFailures": 4,
+        "knownPrecision": 0.45,
+        "recall": 0.8181818181818182,
+        "interceptCost": 820,
+        "baselineKnownCrashHours": 2640,
+        "netHoursAtFullEffect": 1340,
+        "netHoursAtHalfEffect": 260,
+        "breakEvenEffectiveness": 0.37962962962962965,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -820
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -280
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 260
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 800
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1340
+          }
+        ]
+      }
+    },
+    {
+      "name": "门窗硬装",
+      "jobs": 126,
+      "failed": 12,
+      "succeeded": 111,
+      "unknown": 3,
+      "known": 123,
+      "failureRate": 0.0975609756097561,
+      "policy": {
+        "jobs": 126,
+        "failed": 12,
+        "succeeded": 111,
+        "unknown": 3,
+        "known": 123,
+        "failureRate": 0.0975609756097561,
+        "intercepted": 20,
+        "caughtFailures": 10,
+        "falseInterceptions": 10,
+        "interceptedUnknown": 0,
+        "missedFailures": 2,
+        "knownPrecision": 0.5,
+        "recall": 0.8333333333333334,
+        "interceptCost": 400,
+        "baselineKnownCrashHours": 1440,
+        "netHoursAtFullEffect": 800,
+        "netHoursAtHalfEffect": 200,
+        "breakEvenEffectiveness": 0.3333333333333333,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -400
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -100
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 500
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 800
+          }
+        ]
+      }
+    }
+  ],
+  "byDay": [
+    {
+      "name": "2026-09-01",
+      "jobs": 146,
+      "failed": 22,
+      "succeeded": 116,
+      "unknown": 8,
+      "known": 138,
+      "failureRate": 0.15942028985507245,
+      "policy": {
+        "jobs": 146,
+        "failed": 22,
+        "succeeded": 116,
+        "unknown": 8,
+        "known": 138,
+        "failureRate": 0.15942028985507245,
+        "intercepted": 33,
+        "caughtFailures": 17,
+        "falseInterceptions": 14,
+        "interceptedUnknown": 2,
+        "missedFailures": 5,
+        "knownPrecision": 0.5483870967741935,
+        "recall": 0.7727272727272727,
+        "interceptCost": 660,
+        "baselineKnownCrashHours": 2640,
+        "netHoursAtFullEffect": 1380,
+        "netHoursAtHalfEffect": 360,
+        "breakEvenEffectiveness": 0.3235294117647059,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -660
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -150
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 360
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 870
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1380
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-02",
+      "jobs": 132,
+      "failed": 19,
+      "succeeded": 107,
+      "unknown": 6,
+      "known": 126,
+      "failureRate": 0.15079365079365079,
+      "policy": {
+        "jobs": 132,
+        "failed": 19,
+        "succeeded": 107,
+        "unknown": 6,
+        "known": 126,
+        "failureRate": 0.15079365079365079,
+        "intercepted": 39,
+        "caughtFailures": 15,
+        "falseInterceptions": 21,
+        "interceptedUnknown": 3,
+        "missedFailures": 4,
+        "knownPrecision": 0.4166666666666667,
+        "recall": 0.7894736842105263,
+        "interceptCost": 780,
+        "baselineKnownCrashHours": 2280,
+        "netHoursAtFullEffect": 1020,
+        "netHoursAtHalfEffect": 120,
+        "breakEvenEffectiveness": 0.43333333333333335,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -780
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -330
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 120
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 570
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1020
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-03",
+      "jobs": 145,
+      "failed": 18,
+      "succeeded": 122,
+      "unknown": 5,
+      "known": 140,
+      "failureRate": 0.12857142857142856,
+      "policy": {
+        "jobs": 145,
+        "failed": 18,
+        "succeeded": 122,
+        "unknown": 5,
+        "known": 140,
+        "failureRate": 0.12857142857142856,
+        "intercepted": 44,
+        "caughtFailures": 17,
+        "falseInterceptions": 25,
+        "interceptedUnknown": 2,
+        "missedFailures": 1,
+        "knownPrecision": 0.40476190476190477,
+        "recall": 0.9444444444444444,
+        "interceptCost": 880,
+        "baselineKnownCrashHours": 2160,
+        "netHoursAtFullEffect": 1160,
+        "netHoursAtHalfEffect": 140,
+        "breakEvenEffectiveness": 0.43137254901960786,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -880
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -370
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 140
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 650
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1160
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-04",
+      "jobs": 134,
+      "failed": 18,
+      "succeeded": 108,
+      "unknown": 8,
+      "known": 126,
+      "failureRate": 0.14285714285714285,
+      "policy": {
+        "jobs": 134,
+        "failed": 18,
+        "succeeded": 108,
+        "unknown": 8,
+        "known": 126,
+        "failureRate": 0.14285714285714285,
+        "intercepted": 40,
+        "caughtFailures": 16,
+        "falseInterceptions": 21,
+        "interceptedUnknown": 3,
+        "missedFailures": 2,
+        "knownPrecision": 0.43243243243243246,
+        "recall": 0.8888888888888888,
+        "interceptCost": 800,
+        "baselineKnownCrashHours": 2160,
+        "netHoursAtFullEffect": 1120,
+        "netHoursAtHalfEffect": 160,
+        "breakEvenEffectiveness": 0.4166666666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -800
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -320
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 160
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 640
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1120
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-05",
+      "jobs": 131,
+      "failed": 16,
+      "succeeded": 106,
+      "unknown": 9,
+      "known": 122,
+      "failureRate": 0.13114754098360656,
+      "policy": {
+        "jobs": 131,
+        "failed": 16,
+        "succeeded": 106,
+        "unknown": 9,
+        "known": 122,
+        "failureRate": 0.13114754098360656,
+        "intercepted": 40,
+        "caughtFailures": 16,
+        "falseInterceptions": 20,
+        "interceptedUnknown": 4,
+        "missedFailures": 0,
+        "knownPrecision": 0.4444444444444444,
+        "recall": 1,
+        "interceptCost": 800,
+        "baselineKnownCrashHours": 1920,
+        "netHoursAtFullEffect": 1120,
+        "netHoursAtHalfEffect": 160,
+        "breakEvenEffectiveness": 0.4166666666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -800
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -320
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 160
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 640
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1120
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-06",
+      "jobs": 132,
+      "failed": 21,
+      "succeeded": 105,
+      "unknown": 6,
+      "known": 126,
+      "failureRate": 0.16666666666666666,
+      "policy": {
+        "jobs": 132,
+        "failed": 21,
+        "succeeded": 105,
+        "unknown": 6,
+        "known": 126,
+        "failureRate": 0.16666666666666666,
+        "intercepted": 38,
+        "caughtFailures": 16,
+        "falseInterceptions": 22,
+        "interceptedUnknown": 0,
+        "missedFailures": 5,
+        "knownPrecision": 0.42105263157894735,
+        "recall": 0.7619047619047619,
+        "interceptCost": 760,
+        "baselineKnownCrashHours": 2520,
+        "netHoursAtFullEffect": 1160,
+        "netHoursAtHalfEffect": 200,
+        "breakEvenEffectiveness": 0.3958333333333333,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -760
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -280
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 680
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1160
+          }
+        ]
+      }
+    },
+    {
+      "name": "2026-09-07",
+      "jobs": 137,
+      "failed": 20,
+      "succeeded": 108,
+      "unknown": 9,
+      "known": 128,
+      "failureRate": 0.15625,
+      "policy": {
+        "jobs": 137,
+        "failed": 20,
+        "succeeded": 108,
+        "unknown": 9,
+        "known": 128,
+        "failureRate": 0.15625,
+        "intercepted": 38,
+        "caughtFailures": 15,
+        "falseInterceptions": 23,
+        "interceptedUnknown": 0,
+        "missedFailures": 5,
+        "knownPrecision": 0.39473684210526316,
+        "recall": 0.75,
+        "interceptCost": 760,
+        "baselineKnownCrashHours": 2400,
+        "netHoursAtFullEffect": 1040,
+        "netHoursAtHalfEffect": 140,
+        "breakEvenEffectiveness": 0.4222222222222222,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -760
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -310
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 140
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 590
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1040
+          }
+        ]
+      }
+    }
+  ],
+  "assumptions": [
+    "拦截后成功消除原本失败的比例未知，以0%、25%、50%、75%、100%做情景测算。",
+    "未知结果不计避免失败收益，但若被拦截仍计20工时成本。",
+    "同步间隔只表示缓存最后完成同步到提交的间隔，不证明资产已过期，也不证明同步造成崩溃。",
+    "无资产版本、失败原因、修复后结果、实际返工时长或全局任务总量；不宣称已实现节省或证明线上失败上升。"
+  ]
+}

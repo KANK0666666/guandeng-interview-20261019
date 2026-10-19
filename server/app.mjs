@@ -1,6 +1,7 @@
 import express from "express";
 import { createStore } from "./store.mjs";
 import { makeDemo } from "./demo.mjs";
+import { preflight, renderCsv } from "./render.mjs";
 import {
   InputError,
   parseCsv,
@@ -14,7 +15,11 @@ import {
   PROFILE_VERSION,
 } from "./data.mjs";
 
-export function createApp({ directory = ".data", task = null } = {}) {
+export function createApp({
+  directory = ".data",
+  task = null,
+  render = null,
+} = {}) {
   const app = express();
   const store = createStore(directory);
   if (task) store.save(task.dataset);
@@ -79,6 +84,24 @@ export function createApp({ directory = ".data", task = null } = {}) {
     },
   );
   app.use(express.json({ limit: "32kb" }));
+  app.get("/api/render/report", (_req, res) => {
+    if (!render) throw new InputError("尚未载入正式渲染任务数据。", 404);
+    res.json({ metrics: render.metrics, rows: render.rows });
+  });
+  app.get("/api/render/queue.csv", (_req, res) => {
+    if (!render) throw new InputError("尚未载入正式渲染任务数据。", 404);
+    res.set("Content-Type", "text/csv; charset=utf-8");
+    res.set(
+      "Content-Disposition",
+      'attachment; filename="interception-queue.csv"',
+    );
+    res.send(renderCsv(render.rows.filter((r) => r.intercept)));
+  });
+  app.post("/api/render/preflight", (req, res) => {
+    if (!render) throw new InputError("尚未载入正式渲染任务数据。", 404);
+    const result = preflight(req.body || {}, render.config.selectedLagMinutes);
+    res.json(result);
+  });
   app.get("/api/datasets/:id/summary", (req, res) =>
     res.json(summarize(getDataset(req), query(req))),
   );

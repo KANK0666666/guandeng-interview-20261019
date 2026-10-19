@@ -17,7 +17,9 @@
     "analyze": "bash exam-kit/run.sh",
     "task:prepare": "node scripts/task.mjs prepare",
     "reproduce": "node scripts/task.mjs reproduce",
-    "reproduce:example": "node scripts/task.mjs reproduce --config examples/task.config.json --output examples/task-metrics.json --check"
+    "reproduce:example": "node scripts/task.mjs reproduce --config examples/task.config.json --output examples/task-metrics.json --check",
+    "analyze:render": "node scripts/render.mjs",
+    "verify:render": "node scripts/render.mjs --check"
   },
   "dependencies": {
     "csv-parse": "7.0.3",

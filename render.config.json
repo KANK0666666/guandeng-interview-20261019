@@ -1,0 +1,9 @@
+{
+  "source": "data/render_jobs.csv",
+  "sha256": "f7674deda7ae2f49cd878073083550acd7e82d765e8675fa694736485cd4b658",
+  "crashHours": 120,
+  "interceptHours": 20,
+  "trainThrough": "2026-09-05",
+  "validationFrom": "2026-09-06",
+  "selectedLagMinutes": 20
+}
