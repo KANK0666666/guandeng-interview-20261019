@@ -187,6 +187,26 @@ export function reviewCostAccounting(groups, effectiveness, costs) {
   };
 }
 
+// One-round replay: a correct pre-render interception prevents this round's
+// crash. Its net saving is crash cost minus interception cost, not zero.
+// This is an accounting convention, not evidence of later repair or delivery.
+export function interceptionCostAccounting(groups, costs) {
+  const ledger = reviewCostAccounting(groups, 100, costs);
+  const account = (row, policy) => ({
+    ...row,
+    correctInterceptionUnitNet: costs.crash - costs.intercept,
+    correctInterceptionNetHours:
+      policy.caughtFailures * (costs.crash - costs.intercept),
+    otherInterceptionHours: row.successfulCheckHours + row.unknownCheckHours,
+    missedFailures: row.failed - policy.caughtFailures,
+    missedFailureHours: (row.failed - policy.caughtFailures) * costs.crash,
+  });
+  return {
+    teams: ledger.teams.map((row) => account(row, row.policy)),
+    totals: account(ledger.totals, ledger.totals),
+  };
+}
+
 // Additional checks are distinct interventions, not distinct jobs. A second
 // actual check on one job is charged again; one check triggered by two rules
 // is entered once. Null means unknown, never zero cost or zero benefit.

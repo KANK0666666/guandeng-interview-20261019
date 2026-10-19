@@ -97,17 +97,16 @@ export default function ServicePolicyPanel({
       </div>
       <RuleOutcomeMatrix
         groups={teams}
-        effect={effect}
-        onEffectChange={onEffectChange}
         costs={costs}
         onShowQueue={onShowQueue}
       />
       <section className="rc-panel rc-live-overview">
         <div className="rc-panel-heading">
           <div>
-            <h2>原同步规则的实时试算</h2>
+            <h2>扩展情景：实际效果与业务权重</h2>
             <p>
-              拖动滑块立即重算基准。完整策略的新增人工成本在上方另计，尚未接入线上任务实时状态。
+              以下另设有效比例检验结果变化，不改变上方“正确拦截净省
+              100”的本轮账。额外人工投入在上方扩展试算另计。
             </p>
           </div>
           <span className="rc-pill">当前假设 {effect}% 有效</span>
@@ -135,7 +134,7 @@ export default function ServicePolicyPanel({
             <small>随权重变化 · 不代表工时或续费</small>
           </div>
           <div>
-            <span>原规则基准净工时</span>
+            <span>扩展情景净工时 · {effect}% 有效</span>
             <strong data-testid="service-net-hours">
               {number(totals.netHours)} 工时
             </strong>

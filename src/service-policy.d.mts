@@ -77,6 +77,22 @@ export function reviewCostAccounting(
     ReviewCostValues)[];
   totals: ReturnType<typeof serviceImpact>["totals"] & ReviewCostValues;
 };
+export type InterceptionCostValues = {
+  correctInterceptionUnitNet: number;
+  correctInterceptionNetHours: number;
+  otherInterceptionHours: number;
+  missedFailures: number;
+  missedFailureHours: number;
+};
+export function interceptionCostAccounting(
+  groups: ImpactGroup[],
+  costs: { crash: number; intercept: number },
+): {
+  teams: (ReturnType<typeof reviewCostAccounting>["teams"][number] &
+    InterceptionCostValues)[];
+  totals: ReturnType<typeof reviewCostAccounting>["totals"] &
+    InterceptionCostValues;
+};
 export function selectHistoricalTasks<
   T extends {
     team_id: string;

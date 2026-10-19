@@ -13,6 +13,7 @@ import {
   selectHistoricalTasks,
   ruleOutcomeBreakdown,
   reviewCostAccounting,
+  interceptionCostAccounting,
   completeStrategyAccounting,
   sortHistoricalQueue,
   weightedFailureCoverage,
@@ -548,6 +549,130 @@ test("cost ledger identifies extra load and break-even without treating absent f
     reviewCostAccounting([], 50, metrics.costs).totals.assessment,
     "equal",
   );
+});
+
+test("one-round accounting credits a correctly intercepted failure by 100 and charges missed crashes by 120", () => {
+  // These single-task fixtures test the agreed accounting, not business evidence.
+  const single = (failed, succeeded, unknown, intercepted) => ({
+    name: KA_TEAM,
+    jobs: 1,
+    failed,
+    succeeded,
+    unknown,
+    policy: {
+      intercepted,
+      caughtFailures: failed * intercepted,
+      falseInterceptions: succeeded * intercepted,
+      interceptedUnknown: unknown * intercepted,
+    },
+  });
+  const cases = [
+    {
+      group: single(1, 0, 0, 1),
+      baseline: 120,
+      after: 20,
+      net: 100,
+      correct: 100,
+      missed: 0,
+    },
+    {
+      group: single(1, 0, 0, 0),
+      baseline: 120,
+      after: 120,
+      net: 0,
+      correct: 0,
+      missed: 120,
+    },
+    {
+      group: single(0, 1, 0, 1),
+      baseline: 0,
+      after: 20,
+      net: -20,
+      correct: 0,
+      missed: 0,
+    },
+    {
+      group: single(0, 0, 1, 1),
+      baseline: 0,
+      after: 20,
+      net: -20,
+      correct: 0,
+      missed: 0,
+    },
+    {
+      group: single(0, 1, 0, 0),
+      baseline: 0,
+      after: 0,
+      net: 0,
+      correct: 0,
+      missed: 0,
+    },
+  ];
+  for (const expected of cases) {
+    const { totals } = interceptionCostAccounting([expected.group], {
+      crash: 120,
+      intercept: 20,
+    });
+    assert.equal(totals.correctInterceptionUnitNet, 100);
+    assert.equal(totals.correctInterceptionNetHours, expected.correct);
+    assert.equal(totals.missedFailureHours, expected.missed);
+    assert.equal(totals.baselineFailureHours, expected.baseline);
+    assert.equal(totals.totalScenarioHours, expected.after);
+    assert.equal(totals.netHours, expected.net);
+    assert.equal(
+      totals.baselineFailureHours - totals.totalScenarioHours,
+      totals.netHours,
+    );
+  }
+});
+
+test("one-round net saving matches independent per-task costs and team totals without deducting checks or missed failures twice", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const records = parse(
+    readFileSync(new URL("../data/render_jobs.csv", import.meta.url)),
+    { columns: true },
+  );
+  const rows = [...new Map(records.map((row) => [row.job_id, row])).values()];
+  let baseline = 0;
+  let after = 0;
+  for (const row of rows) {
+    const hit =
+      Date.parse(row.created_at) - Date.parse(row.asset_synced_at) >=
+      20 * 60_000;
+    if (row.is_success === "0") baseline += 120;
+    if (hit) after += 20;
+    else if (row.is_success === "0") after += 120;
+  }
+  const { totals, teams } = interceptionCostAccounting(
+    metrics.byTeam,
+    metrics.costs,
+  );
+  assert.equal(totals.correctInterceptionNetHours, 11200);
+  assert.equal(totals.otherInterceptionHours, 3200);
+  assert.equal(totals.missedFailures, 22);
+  assert.equal(totals.missedFailureHours, 2640);
+  assert.equal(totals.checkHours, 5440);
+  assert.equal(totals.baselineFailureHours, baseline);
+  assert.equal(totals.totalScenarioHours, after);
+  assert.equal(after, 8080);
+  assert.equal(totals.netHours, 8000);
+  assert.equal(baseline - after, totals.netHours);
+  assert.equal(
+    totals.correctInterceptionNetHours - totals.otherInterceptionHours,
+    totals.netHours,
+  );
+  assert.equal(
+    teams.reduce((sum, row) => sum + row.netHours, 0),
+    8000,
+  );
+  assert.equal(teams.find((row) => row.name === KA_TEAM).netHours, 2720);
+  assert.equal(teams.find((row) => row.name === CUSTOM_TEAM).netHours, 180);
+  const extra = completeStrategyAccounting(
+    totals,
+    { additionalChecks: 1, otherHours: 0, additionalAvoidedFailures: 0 },
+    metrics.costs,
+  );
+  assert.equal(extra.netHours, 7980);
 });
 
 test("complete strategy leaves unknown extra costs and benefits uncomputed instead of treating them as free", () => {

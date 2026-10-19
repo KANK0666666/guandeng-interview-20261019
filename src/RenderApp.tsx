@@ -480,8 +480,6 @@ export default function RenderApp() {
             <>
               <RuleOutcomeMatrix
                 groups={m.byTeam}
-                effect={effect}
-                onEffectChange={setEffect}
                 costs={m.costs}
                 onShowQueue={showHistory}
               />
@@ -754,7 +752,7 @@ export default function RenderApp() {
                     <div>
                       <h2>
                         <SlidersHorizontal size={18} />
-                        拦截不一定消除失败
+                        扩展情景：拦截后的实际效果
                       </h2>
                       <p>
                         设 α
@@ -775,7 +773,7 @@ export default function RenderApp() {
                     />
                   </label>
                   <div className="rc-scenario">
-                    <span>原同步规则基准净工时</span>
+                    <span>扩展情景净工时（按 {effect}% 有效试算）</span>
                     <strong className={net < 0 ? "negative" : ""}>
                       {n(net)} <small>工时</small>
                     </strong>

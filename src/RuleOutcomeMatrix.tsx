@@ -2,23 +2,19 @@ import { useState } from "react";
 import ReviewCostLedger from "./ReviewCostLedger";
 import {
   ruleOutcomeBreakdown,
-  reviewCostAccounting,
+  interceptionCostAccounting,
   type HistoryFilters,
   type ImpactGroup,
 } from "./service-policy.mjs";
 
 type Props = {
   groups: ImpactGroup[];
-  effect: number;
-  onEffectChange: (effect: number) => void;
   costs: { crash: number; intercept: number };
   onShowQueue: (filters?: HistoryFilters) => void;
 };
 
 export default function RuleOutcomeMatrix({
   groups,
-  effect,
-  onEffectChange,
   costs,
   onShowQueue,
 }: Props) {
@@ -27,11 +23,7 @@ export default function RuleOutcomeMatrix({
     ? groups.filter((group) => group.name === team)
     : groups;
   const counts = ruleOutcomeBreakdown(selectedGroups);
-  const costPreview = reviewCostAccounting(
-    selectedGroups,
-    effect,
-    costs,
-  ).totals;
+  const costPreview = interceptionCostAccounting(selectedGroups, costs).totals;
   const n = (value: number) =>
     value.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
   const cards = [
@@ -41,6 +33,7 @@ export default function RuleOutcomeMatrix({
       scope: "misses",
       outcome: "success",
       meaning: "历史渲染成功；按规则回放，无需新增这次核查。",
+      accounting: "本轮新增拦截成本 0 工时",
       tone: "smooth",
     },
     {
@@ -49,6 +42,7 @@ export default function RuleOutcomeMatrix({
       scope: "misses",
       outcome: "failure",
       meaning: "规则漏掉的失败，优先调查遗漏原因，减少客户反复重试。",
+      accounting: `失败损失 ${counts.failureUnflagged} × ${costs.crash} ＝ ${n(costPreview.missedFailureHours)} 工时`,
       tone: "missed",
     },
     {
@@ -56,7 +50,8 @@ export default function RuleOutcomeMatrix({
       title: "失败，被规则圈到",
       scope: "hits",
       outcome: "failure",
-      meaning: "提前介入的候选。需要人工核查与处理，验证能否挽救交付。",
+      meaning: "本轮按正确提前拦截避免崩溃记账；后续处理与交付需继续跟进。",
+      accounting: `正确拦截净收益 ${counts.failureFlagged} × (${costs.crash} − ${costs.intercept}) ＝ +${n(costPreview.correctInterceptionNetHours)} 工时`,
       tone: "rescue",
     },
     {
@@ -65,6 +60,7 @@ export default function RuleOutcomeMatrix({
       scope: "hits",
       outcome: "success",
       meaning: "会增加检查投入；新功能、质量验证的价值需要另外记录。",
+      accounting: `额外拦截成本 ${counts.successFlagged} × ${costs.intercept} ＝ ${n(costPreview.successfulCheckHours)} 工时`,
       tone: "extra",
     },
   ] as const;
@@ -101,14 +97,15 @@ export default function RuleOutcomeMatrix({
           原规则投入 <b>{n(costPreview.checkHours)}</b> 工时
         </span>
         <span>
-          {effect}% 有效时预计避免损失 <b>{n(costPreview.avoidedHours)}</b>
+          正确拦截净收益 <b>+{n(costPreview.correctInterceptionNetHours)}</b>{" "}
+          工时
         </span>
         <span>
           {costPreview.assessment === "higher"
-            ? "基准净增加负荷"
+            ? "本轮净增加工时"
             : costPreview.assessment === "equal"
-              ? "基准工时持平"
-              : "基准净节省"}{" "}
+              ? "本轮工时持平"
+              : "本轮净节约"}{" "}
           <b>{n(Math.abs(costPreview.netHours))}</b> 工时
         </span>
         <small>查看原规则明细 ↓</small>
@@ -128,6 +125,12 @@ export default function RuleOutcomeMatrix({
               {counts[card.key]} <small>个</small>
             </strong>
             <p>{card.meaning}</p>
+            <span
+              className="rc-quadrant-accounting"
+              data-testid={`quadrant-cost-${card.key}`}
+            >
+              {card.accounting}
+            </span>
             {card.key === "successFlagged" && (
               <span
                 className="rc-quadrant-breakdown"
@@ -161,12 +164,11 @@ export default function RuleOutcomeMatrix({
         >
           未触发 {counts.unknownUnflagged} 个
         </button>
-        ，不放进成功或失败。
+        ，不放进成功或失败。已触发的未知任务仍扣{" "}
+        {n(costPreview.unknownCheckHours)} 工时，不计避免失败收益。
       </p>
       <ReviewCostLedger
         groups={selectedGroups}
-        effect={effect}
-        onEffectChange={onEffectChange}
         costs={costs}
         onShowQueue={onShowQueue}
       />
