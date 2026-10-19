@@ -14,7 +14,7 @@
 
 ## 启动
 
-推荐 **Node.js 24**，最低 22.13。当前本机已经安装依赖。
+推荐 **Node.js 24**（`.nvmrc`），最低 22.13。工作台和 JSON 复算只需要 Node.js；独立的 `exam-kit` 才需要 Python。
 
 ```bash
 npm ci          # 首次克隆时执行；本机已有依赖可跳过
@@ -30,6 +30,46 @@ npm start      # 先构建，再以生产模式启动同一个本地服务
 ```
 
 端口冲突时：`PORT=4318 npm run dev`。本地数据默认写入 `.data/workspace.sqlite`；可用 `DATA_DIR=/absolute/path npm run dev` 创建独立工作区。
+
+## 固定任务数据与一键复算
+
+拿到正式 CSV、确认字段后，在项目根目录执行一次（字段名替换成真实表头，没有的字段省略）：
+
+```bash
+npm run task:prepare -- --file "/绝对路径/任务.csv" --metric "指标列" --group "分类列" --date "日期列"
+npm run dev
+```
+
+命令生成根目录 `task.config.json` 和 `results/task-metrics.json`。来自项目外的文件会按原始字节复制到 `private-inputs/`，项目内的文件直接记录相对路径。配置保存文件 SHA-256、数据性质、默认页面、字段映射、筛选和规则。服务启动会校验文件并自动导入，页面优先使用这份配置，不依赖旧 SQLite 或浏览器缓存。已有同一份数据的处理备注仍保留。
+
+可在准备命令追加 `--view diagnostics --rule-field "检查列" --op lte --threshold 2`；比较方式支持 `gt/gte/lt/lte`。筛选参数是 `--q`、`--filter "分类列" --value "分类值"`、`--from YYYY-MM-DD --to YYYY-MM-DD`。百分比列的阈值 `12.5` 表示 `12.5%`。纯类别任务可省略 `--metric`。这些只是配置方式，具体字段和阈值必须来自正式业务判断。
+
+```bash
+npm run reproduce              # 按已保存配置重算 JSON
+npm run reproduce -- --check   # 核对已保存结果；不一致时失败，不覆盖报告
+```
+
+页面的临时探索不会改写交付配置；确定最终口径后修改 `task.config.json` 或重新执行准备命令，再复算并重启服务。直接编辑配置时保留已有键，使用相同的字符串值格式。输出包含来源校验值、有效/排除数量、汇总、前 8 组、完整日期趋势和全部规则命中记录序号，与网页共用计算函数。
+
+提交时包含 `task.config.json`、`results/task-metrics.json` 和 README 中的准确数据放置位置。原始数据按任务要求处理：允许公开时放到例如 `data/任务.csv` 后重新准备；不公开时，评审者将原发放文件放到配置指定的相对路径。**不能只交 `.data/` 数据库或浏览器操作截图。** 文件缺失、校验值变化、字段错误都会明确报错，不会自动换成演示数据。
+
+评审者拿到交付仓库及原始文件后，完整复现步骤：
+
+```bash
+npm ci
+npm run reproduce -- --check
+npm run build
+npm start
+```
+
+目前尚无正式任务，根目录不放正式配置。先用已提交的人工库存示例演练：
+
+```bash
+npm run reproduce:example
+TASK_CONFIG=examples/task.config.json npm run dev
+```
+
+此示例首次打开即载入“库存 / 仓库”和 `库存 ≤ 2`，命中 **3 / 8 = 37.5%**；合计 **52**、均值 **6.5**。所有示例数字仅验证功能。`TASK_CONFIG` 可指定其他配置，路径相对项目根目录；环境变量直接在终端设置，`.env.example` 不会被自动读取。
 
 ## 三套模板
 
@@ -55,6 +95,8 @@ npm run template -- all         # 恢复三套
 然后刷新页面。品牌、标题、默认入口、模板提示由 [`project.config.ts`](project.config.ts) 集中配置。正式交付可把 `templateMode` 改为 `false`。
 
 ## 用自己的 CSV
+
+临时探索可通过页面导入；正式交付使用上面的命令固化输入与口径。
 
 1. 点击「导入 CSV」，选择文件或拖拽上传。
 2. 检查行数、表头、空值与重复行。
@@ -93,6 +135,9 @@ server/app.mjs          # HTTP API、校验与导出
 server/data.mjs         # CSV、类型推断、筛选、统计、规则
 server/store.mjs        # SQLite 存储
 server/demo.mjs         # 明确标注的人工演示数据
+server/task.mjs         # 任务配置校验、数据校验值与可复算报告
+scripts/task.mjs        # task:prepare / reproduce 命令
+examples/task.config.json # 可直接演练的人工库存配置
 tests/                  # 数据正确性与完整 API 流程
 docs/实战套用说明.md      # 30 分钟执行顺序与交付说明骨架
 ```
@@ -102,6 +147,7 @@ docs/实战套用说明.md      # 30 分钟执行顺序与交付说明骨架
 | 方法       | 路径                                 | 用途                                                        |
 | ---------- | ------------------------------------ | ----------------------------------------------------------- |
 | GET        | `/api/health`                        | 服务状态                                                    |
+| GET        | `/api/workspace`                     | 当前任务的默认数据集、字段、筛选与规则                      |
 | GET / POST | `/api/datasets`                      | 列表 / 导入 CSV 原始字节；文件名用 URL 编码的 `X-File-Name` |
 | GET        | `/api/datasets/:id/summary`          | 指标、分组和趋势                                            |
 | GET        | `/api/datasets/:id/rows`             | 搜索、筛选、排序、分页                                      |
@@ -115,7 +161,15 @@ docs/实战套用说明.md      # 30 分钟执行顺序与交付说明骨架
 
 ## 验证与适用范围
 
-`npm run check` 验证 CSV 编码与语法、数值和日期、空值分母、筛选/排序、规则边界、导出转义、API 错误、状态更新及重开 SQLite 后的持久化。浏览器检查覆盖三套页面、不同字段 CSV 上传、字段映射、备注保存、状态筛选与清单下载。
+`npm run check` 验证 CSV 编码与语法、数值和日期、空值分母、筛选/排序、规则边界、导出转义、API 错误、状态更新及重开 SQLite 后的持久化。也验证任务配置首次导入、复算一致性、源文件校验、外部文件复制与错误配置拒绝。浏览器检查覆盖三套页面、不同字段 CSV 上传、字段映射、备注保存、状态筛选与清单下载。
+
+如需运行 `exam-kit` 的全部 Python 检查，先安装独立环境（Python 3.12+）：
+
+```bash
+python3 -m venv exam-kit/.venv
+exam-kit/.venv/bin/python -m pip install -r exam-kit/requirements.txt
+npm run check:all
+```
 
 这是本地单用户模板，默认只监听 `127.0.0.1`。它没有账号/权限管理；CSV 和统计在内存中处理，适合限定大小的面试数据。数值使用 JavaScript Number，若正式题目要求精确货币记账，应改用整数分或十进制定点运算。字体有系统字体回退，不需要任何付费 API 或密钥。
 

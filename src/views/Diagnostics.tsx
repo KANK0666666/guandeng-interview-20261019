@@ -31,20 +31,25 @@ export default function Diagnostics({
   query,
   onOpen,
   revision,
+  defaultRule,
 }: {
   dataset: Dataset;
   mapping: Mapping;
   query: string;
   onOpen: (r: Row) => void;
   revision: number;
+  defaultRule?: Rule | null;
 }) {
-  const initial = {
-    ruleField: dataset.demo ? "处理时长" : mapping.metric,
+  const demoRule = dataset.id === "demo-orders-v1" && defaultRule === undefined;
+  const initial = defaultRule || {
+    ruleField: demoRule ? "处理时长" : mapping.metric,
     op: "gt",
-    threshold: dataset.demo ? "48" : "",
+    threshold: demoRule ? "48" : "",
   };
   const [draft, setDraft] = useState<Rule>(initial);
-  const [rule, setRule] = useState<Rule | null>(dataset.demo ? initial : null);
+  const [rule, setRule] = useState<Rule | null>(
+    defaultRule ?? (demoRule ? initial : null),
+  );
   const [error, setError] = useState("");
   const result = useResource<Diagnosis>(
     rule
@@ -82,9 +87,11 @@ export default function Diagnostics({
               设置关注规则
             </h2>
             <p>
-              {dataset.demo
-                ? "演示规则：处理时长大于 48。该阈值仅用于测试交互。"
-                : "根据任务目标设置阈值，核查命中记录。"}
+              {defaultRule
+                ? "已载入交付配置中的规则，可核对或调整阈值。"
+                : demoRule
+                  ? "演示规则：处理时长大于 48。该阈值仅用于测试交互。"
+                  : "根据任务目标设置阈值，核查命中记录。"}
             </p>
           </div>
           <span className="small-tag">可解释规则</span>

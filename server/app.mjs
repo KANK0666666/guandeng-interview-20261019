@@ -14,10 +14,11 @@ import {
   PROFILE_VERSION,
 } from "./data.mjs";
 
-export function createApp({ directory = ".data" } = {}) {
+export function createApp({ directory = ".data", task = null } = {}) {
   const app = express();
   const store = createStore(directory);
-  if (!store.get("demo-orders-v1")) store.save(makeDemo());
+  if (task) store.save(task.dataset);
+  else if (!store.get("demo-orders-v1")) store.save(makeDemo());
   // Refresh inferred metadata for previously imported files; preserve raw rows and notes.
   for (const dataset of store.list()) {
     if (dataset.profileVersion !== PROFILE_VERSION) {
@@ -54,6 +55,9 @@ export function createApp({ directory = ".data" } = {}) {
     res.json({ ok: true, storage: "SQLite", mode: "local-single-user" }),
   );
   app.get("/api/datasets", (_req, res) => res.json(store.list().map(metadata)));
+  app.get("/api/workspace", (_req, res) =>
+    res.json({ task: task?.workspace || null }),
+  );
   app.post(
     "/api/datasets",
     express.raw({ type: () => true, limit: "5mb" }),

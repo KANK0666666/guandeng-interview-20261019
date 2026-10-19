@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "data": {
+    "path": "examples/库存-人工演示.csv",
+    "sha256": "9de7eac571629a1b385126853ff87fdcc5c895de795872f1aeab0e6cd29cc5ce",
+    "kind": "synthetic"
+  },
+  "view": "diagnostics",
+  "mapping": {
+    "metric": "库存",
+    "group": "仓库",
+    "date": ""
+  },
+  "filters": {
+    "q": "",
+    "filter": "",
+    "value": "",
+    "from": "",
+    "to": ""
+  },
+  "rule": {
+    "ruleField": "库存",
+    "op": "lte",
+    "threshold": "2"
+  }
+}

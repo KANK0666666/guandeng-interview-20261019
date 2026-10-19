@@ -30,7 +30,7 @@ import {
 const Overview = lazy(() => import("./views/Overview"));
 import Records from "./views/Records";
 import Diagnostics from "./views/Diagnostics";
-import type { Dataset, Filters, Mapping, Row, View } from "./types";
+import type { Dataset, Filters, Mapping, Row, View, Workspace } from "./types";
 
 const emptyFilters: Filters = {
   q: "",
@@ -74,14 +74,19 @@ export default function App() {
     const value = new URLSearchParams(location.search).get("view") as View;
     return project.views.includes(value) ? value : project.defaultView;
   });
-  const [selectedId, setSelectedId] = useState(
-    stored("fieldwork-dataset") || "demo-orders-v1",
-  );
+  const [selectedId, setSelectedId] = useState("");
   const [listRevision, setListRevision] = useState(0),
     [rowRevision, setRowRevision] = useState(0);
   const datasets = useResource<Dataset[]>("/api/datasets", listRevision);
+  const workspace = useResource<Workspace>("/api/workspace", listRevision);
+  const task = workspace.data?.task;
+  const initialDatasetId =
+    task?.datasetId || stored("fieldwork-dataset") || "demo-orders-v1";
   const dataset =
-    datasets.data?.find((d) => d.id === selectedId) || datasets.data?.[0];
+    datasets.data?.find((d) => d.id === (selectedId || initialDatasetId)) ||
+    datasets.data?.[0];
+  const activeTask = dataset?.id === task?.datasetId ? task : null;
+  const connectionError = datasets.error || workspace.error;
   const [mapping, setMapping] = useState<Mapping>({
     metric: "",
     group: "",
@@ -99,14 +104,17 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [filters.q]);
   useEffect(() => {
-    if (!dataset) return;
-    let value: Mapping = dataset.demo
-      ? project.demoMapping
-      : { metric: "", group: "", date: "" };
+    if (!dataset || !workspace.data) return;
+    let value: Mapping =
+      activeTask?.mapping ||
+      (dataset.id === "demo-orders-v1"
+        ? project.demoMapping
+        : { metric: "", group: "", date: "" });
     try {
-      value =
-        JSON.parse(stored(`fieldwork-mapping-${dataset.id}`) || "null") ||
-        value;
+      if (!activeTask)
+        value =
+          JSON.parse(stored(`fieldwork-mapping-${dataset.id}`) || "null") ||
+          value;
     } catch {
       /* Use the default mapping. */
     }
@@ -119,11 +127,20 @@ export default function App() {
       group: valid(value.group),
       date: valid(value.date, "date"),
     });
-    setFilters(emptyFilters);
-    setDebouncedSearch("");
+    setFilters(activeTask?.filters || emptyFilters);
+    setDebouncedSearch(activeTask?.filters.q || "");
     setRecord(null);
     save("fieldwork-dataset", dataset.id);
-  }, [dataset?.id]);
+  }, [dataset?.id, workspace.data, activeTask?.revision]);
+  useEffect(() => {
+    const urlView = new URLSearchParams(location.search).get("view") as View;
+    if (
+      task &&
+      !project.views.includes(urlView) &&
+      project.views.includes(task.view)
+    )
+      setView(task.view);
+  }, [task?.revision]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 4000);
@@ -227,10 +244,10 @@ export default function App() {
             <div>
               <strong>本地工作区</strong>
               <small>
-                <i className={datasets.error ? "offline" : ""} />
-                {datasets.error
+                <i className={connectionError ? "offline" : ""} />
+                {connectionError
                   ? "服务未连接"
-                  : datasets.loading
+                  : datasets.loading || workspace.loading
                     ? "正在连接"
                     : "服务已连接"}
               </small>
@@ -300,9 +317,9 @@ export default function App() {
               </div>
             )}
           </div>
-          {datasets.error ? (
+          {connectionError ? (
             <>
-              <ErrorBox error={datasets.error} />
+              <ErrorBox error={connectionError} />
               <button
                 className="button button-primary"
                 onClick={() => setListRevision((n) => n + 1)}
@@ -310,7 +327,7 @@ export default function App() {
                 重新连接
               </button>
             </>
-          ) : !dataset ? (
+          ) : !dataset || !workspace.data ? (
             <Loading />
           ) : (
             <>
@@ -357,12 +374,13 @@ export default function App() {
               )}
               {view === "diagnostics" && (
                 <Diagnostics
-                  key={dataset.id}
+                  key={`${dataset.id}-${activeTask?.revision || "local"}`}
                   dataset={dataset}
                   mapping={mapping}
                   query={query}
                   onOpen={setRecord}
                   revision={rowRevision}
+                  defaultRule={activeTask ? activeTask.rule : undefined}
                 />
               )}
               <footer className="page-footer">

@@ -23,6 +23,17 @@ export type Dataset = {
   completeness: number;
 };
 export type Mapping = { metric: string; group: string; date: string };
+export type Workspace = {
+  task: {
+    datasetId: string;
+    revision: string;
+    mapping: Mapping;
+    filters: Filters;
+    rule: Rule | null;
+    view: View;
+    sourceSha256: string;
+  } | null;
+};
 export type Filters = {
   q: string;
   filter: string;

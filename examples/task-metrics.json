@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "configurationSha256": "c560e4f85761e0b0c374aa1b31a4dbb05a168727f704abcc7d721405df0c08c1",
+  "source": {
+    "path": "examples/库存-人工演示.csv",
+    "sha256": "9de7eac571629a1b385126853ff87fdcc5c895de795872f1aeab0e6cd29cc5ce",
+    "kind": "synthetic",
+    "rows": 8,
+    "columns": ["SKU", "仓库", "库存", "补货周期", "备注"],
+    "encoding": "UTF-8"
+  },
+  "mapping": {
+    "metric": "库存",
+    "group": "仓库",
+    "date": ""
+  },
+  "filters": {
+    "q": "",
+    "filter": "",
+    "value": "",
+    "from": "",
+    "to": ""
+  },
+  "rule": {
+    "ruleField": "库存",
+    "op": "lte",
+    "threshold": "2"
+  },
+  "summary": {
+    "count": 8,
+    "metric": "库存",
+    "metricFormat": "number",
+    "aggregation": "sum",
+    "total": 52,
+    "average": 6.5,
+    "validValues": 8,
+    "excludedValues": 0,
+    "completeness": 1,
+    "groupCount": 3,
+    "groups": [
+      {
+        "name": "华东",
+        "count": 3,
+        "validValues": 3,
+        "excludedValues": 0,
+        "value": 40
+      },
+      {
+        "name": "华南",
+        "count": 3,
+        "validValues": 3,
+        "excludedValues": 0,
+        "value": 10
+      },
+      {
+        "name": "华北",
+        "count": 2,
+        "validValues": 2,
+        "excludedValues": 0,
+        "value": 2
+      }
+    ],
+    "trend": []
+  },
+  "diagnostics": {
+    "field": "库存",
+    "op": "lte",
+    "threshold": 2,
+    "format": "number",
+    "evaluated": 8,
+    "excluded": 0,
+    "matched": 3,
+    "rate": 0.375,
+    "rowIds": ["2", "7", "4"]
+  },
+  "notes": [
+    "按配置筛选；数值排除空值/无效值；百分比使用记录等权均值，非按业务分母加权。",
+    "日期统一为 UTC；summary.groups 仅列前 8 组，summary.trend 包含全部有效日期。",
+    "诊断 rowIds 是原始 CSV 数据记录序号（从 1 开始，不含表头），包括全部命中记录。",
+    "人工测试数据，仅验证功能，不作为业务结论。"
+  ]
+}
