@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { parse } from "csv-parse/sync";
 import { createApp } from "../server/app.mjs";
 import { createStore } from "../server/store.mjs";
+import { parseCsv, PROFILE_VERSION } from "../server/data.mjs";
 
 test("HTTP flow: upload → filters → note → diagnosis → export → persistence", async () => {
   const directory = await mkdtemp(join(tmpdir(), "fieldwork-test-"));
@@ -112,6 +113,37 @@ test("HTTP flow: upload → filters → note → diagnosis → export → persis
     assert.equal(reopened.notes(datasetId)["2"].note, "补货待确认");
     reopened.close();
   } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("previously imported files refresh field types without changing source rows or notes", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "fieldwork-migration-"));
+  let store;
+  try {
+    store = createStore(directory);
+    const data = parseCsv(
+      Buffer.from("日期,转化率\n20261001,12.5%\n20261002,25%"),
+    );
+    data.profileVersion = 1;
+    data.columns = data.columns.map((c) => ({
+      ...c,
+      type: "text",
+      format: undefined,
+    }));
+    store.save(data);
+    store.setNote(data.id, "1", { status: "跟进中", note: "保留此备注" });
+    store.close();
+    const app = createApp({ directory });
+    store = app.locals.store;
+    const refreshed = store.get(data.id);
+    assert.equal(refreshed.profileVersion, PROFILE_VERSION);
+    assert.equal(refreshed.columns[0].type, "date");
+    assert.equal(refreshed.columns[1].format, "percent");
+    assert.deepEqual(refreshed.rows, data.rows);
+    assert.equal(store.notes(data.id)["1"].note, "保留此备注");
+  } finally {
+    store?.close();
     await rm(directory, { recursive: true, force: true });
   }
 });

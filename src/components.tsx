@@ -92,34 +92,41 @@ export function MappingBar({
       .filter((c) => !type || c.type === type)
       .map((c) => ({ value: c.name, label: c.name }));
   return (
-    <div className="mapping-bar">
-      <div className="mapping-label">
-        <SlidersHorizontal size={16} />
-        <strong>分析字段</strong>
+    <>
+      <div className="mapping-bar">
+        <div className="mapping-label">
+          <SlidersHorizontal size={16} />
+          <strong>分析字段</strong>
+        </div>
+        <Select
+          label="数值指标"
+          value={mapping.metric}
+          onChange={(metric) => onChange({ ...mapping, metric })}
+          options={options("number")}
+          empty="选择数值字段"
+        />
+        <Select
+          label="分组维度"
+          value={mapping.group}
+          onChange={(group) => onChange({ ...mapping, group })}
+          options={options()}
+          empty="选择分类字段"
+        />
+        <Select
+          label="日期字段"
+          value={mapping.date}
+          onChange={(date) => onChange({ ...mapping, date })}
+          options={options("date")}
+          empty="选择日期字段"
+        />
+        <span className="mapping-hint">按数据含义选择字段</span>
       </div>
-      <Select
-        label="数值指标"
-        value={mapping.metric}
-        onChange={(metric) => onChange({ ...mapping, metric })}
-        options={options("number")}
-        empty="选择数值字段"
-      />
-      <Select
-        label="分组维度"
-        value={mapping.group}
-        onChange={(group) => onChange({ ...mapping, group })}
-        options={options()}
-        empty="选择分类字段"
-      />
-      <Select
-        label="日期字段"
-        value={mapping.date}
-        onChange={(date) => onChange({ ...mapping, date })}
-        options={options("date")}
-        empty="选择日期字段"
-      />
-      <span className="mapping-hint">按数据含义选择字段</span>
-    </div>
+      {dataset.columns
+        .filter((c) => c.warning)
+        .map((c) => (
+          <ErrorBox key={c.name} error={c.warning!} />
+        ))}
+    </>
   );
 }
 export function FilterBar({
@@ -243,6 +250,7 @@ export function DataTable({
   sort,
   onSort,
   annotations = false,
+  priorityColumns = [],
 }: {
   dataset: Dataset;
   rows: Row[];
@@ -251,8 +259,18 @@ export function DataTable({
   sort?: string;
   onSort?: (field: string) => void;
   annotations?: boolean;
+  priorityColumns?: string[];
 }) {
-  const columns = compact ? dataset.columns.slice(0, 6) : dataset.columns;
+  const ordered = [
+    ...new Set([
+      dataset.columns[0]?.name,
+      ...priorityColumns,
+      ...dataset.columns.map((c) => c.name),
+    ]),
+  ]
+    .map((name) => dataset.columns.find((c) => c.name === name))
+    .filter((c): c is Dataset["columns"][number] => Boolean(c));
+  const columns = compact ? ordered.slice(0, 6) : ordered;
   if (!rows.length)
     return (
       <Empty title="没有符合条件的记录">试试清除筛选，或者更换关键词。</Empty>
@@ -656,7 +674,8 @@ export function Quality({ dataset }: { dataset: Dataset }) {
       <div className="quality-body">
         <p>
           类型来自字段内容推断；含前导零的编号保留为文本。数值统计跳过空值与无效值，不把它们当作
-          0。日期按源数据的日历日期分组。
+          0。百分比换算后按有效记录等权求均值；日期按 UTC
+          日历日期分组，无时区时间按 UTC 解释。
         </p>
         <div className="table-scroll">
           <table>
@@ -674,7 +693,9 @@ export function Quality({ dataset }: { dataset: Dataset }) {
                 <tr key={c.name}>
                   <td>{c.name}</td>
                   <td>
-                    {{ text: "文本", number: "数值", date: "日期" }[c.type]}
+                    {c.format === "percent"
+                      ? "百分比"
+                      : { text: "文本", number: "数值", date: "日期" }[c.type]}
                   </td>
                   <td>{c.missing}</td>
                   <td>{c.invalid}</td>

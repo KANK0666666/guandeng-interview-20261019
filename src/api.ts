@@ -42,6 +42,15 @@ export const number = (n: number | null | undefined, digits = 0) =>
       );
 export const percentage = (n: number | null | undefined) =>
   n == null ? "—" : `${(n * 100).toFixed(1)}%`;
+export const metricNumber = (
+  n: number | null | undefined,
+  format = "number",
+) =>
+  n == null
+    ? "无有效数据"
+    : format === "percent"
+      ? `${number(n * 100, 2)}%`
+      : number(n, 2);
 export function parameters(...sources: object[]) {
   const query = new URLSearchParams();
   for (const source of sources)

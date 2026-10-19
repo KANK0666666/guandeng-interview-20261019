@@ -16,7 +16,7 @@ import {
   Sigma,
   TrendingUp,
 } from "lucide-react";
-import { number, percentage, useResource } from "../api";
+import { metricNumber, number, percentage, useResource } from "../api";
 import {
   DataTable,
   Empty,
@@ -54,7 +54,12 @@ export default function Overview({
   if (result.error) return <ErrorBox error={result.error} />;
   if (!result.data) return <Loading />;
   const s = result.data;
-  const maxGroup = Math.max(1, ...s.groups.map((g) => Math.abs(g.value)));
+  const isPercent = s.metricFormat === "percent";
+  const metricLabel = `${mapping.metric}${isPercent ? "等权均值" : "合计"}`;
+  const formatValue = (v: number | null) => metricNumber(v, s.metricFormat);
+  const maxGroup =
+    Math.max(0, ...s.groups.map((g) => Math.abs(g.value ?? 0))) || 1;
+  const hasTrendValue = s.trend.some((point) => point[chartKey] !== null);
   return (
     <div className="view-content">
       <div className="stats-grid">
@@ -65,22 +70,38 @@ export default function Overview({
           icon={<Layers3 size={17} />}
         />
         <Stat
-          label={mapping.metric ? `${mapping.metric}合计` : "数值合计"}
-          value={number(s.total, 2)}
+          label={
+            isPercent
+              ? "指标口径"
+              : mapping.metric
+                ? `${mapping.metric}合计`
+                : "数值合计"
+          }
+          value={
+            isPercent ? "百分比" : mapping.metric ? formatValue(s.total) : "—"
+          }
           detail={
-            mapping.metric
-              ? `${number(s.validValues)} 个有效数值参与统计`
-              : "选择数值指标后显示"
+            isPercent
+              ? "百分比不累加；按有效记录等权计算均值"
+              : mapping.metric
+                ? `${number(s.validValues)} 个有效数值参与统计`
+                : "选择数值指标后显示"
           }
           icon={<Sigma size={18} />}
           accent
         />
         <Stat
-          label={mapping.metric ? `${mapping.metric}均值` : "数值均值"}
-          value={number(s.average, 2)}
+          label={
+            mapping.metric
+              ? `${mapping.metric}${isPercent ? "等权" : ""}均值`
+              : "数值均值"
+          }
+          value={mapping.metric ? formatValue(s.average) : "—"}
           detail={
             mapping.metric
-              ? `合计 ÷ 有效数值数 · 排除 ${s.excludedValues} 条`
+              ? isPercent
+                ? `${s.validValues} 条有效记录等权平均，未按业务分母加权 · 排除 ${s.excludedValues} 条`
+                : `合计 ÷ 有效数值数 · 排除 ${s.excludedValues} 条`
               : "空值和无效值不参与均值计算"
           }
           icon={<Hash size={18} />}
@@ -101,7 +122,7 @@ export default function Overview({
               </h2>
               <p>
                 {mapping.date
-                  ? `按「${mapping.date}」汇总 · ${chartKey === "count" ? "记录数量" : `${mapping.metric}合计`}`
+                  ? `按「${mapping.date}」汇总 · ${chartKey === "count" ? "记录数量" : metricLabel}`
                   : "选择日期字段，查看随时间变化的趋势"}
               </p>
             </div>
@@ -121,7 +142,7 @@ export default function Overview({
               </button>
             </div>
           </div>
-          {mapping.date && s.trend.length ? (
+          {mapping.date && s.trend.length && hasTrendValue ? (
             <div className="chart">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
@@ -167,19 +188,23 @@ export default function Overview({
                     tickLine={false}
                     tick={{ fill: "#9298a3", fontSize: 11 }}
                     tickFormatter={(v) =>
-                      Math.abs(v) >= 1000
-                        ? `${number(v / 1000, 1)}k`
-                        : String(v)
+                      chartKey === "value" && isPercent
+                        ? `${number(v * 100, 2)}%`
+                        : Math.abs(v) >= 1000
+                          ? `${number(v / 1000, 1)}k`
+                          : String(v)
                     }
                     width={48}
                   />
                   <Tooltip
                     labelFormatter={(label) => String(label)}
                     formatter={(v) => [
-                      number(Number(v), 2),
-                      chartKey === "count"
-                        ? "记录数量"
-                        : `${mapping.metric}合计`,
+                      v == null
+                        ? "无有效数据"
+                        : chartKey === "count"
+                          ? number(Number(v))
+                          : formatValue(Number(v)),
+                      chartKey === "count" ? "记录数量" : metricLabel,
                     ]}
                     contentStyle={{
                       borderRadius: 10,
@@ -193,23 +218,39 @@ export default function Overview({
                     stroke="#e87542"
                     strokeWidth={2.5}
                     fill="url(#orange-fill)"
-                    dot={s.trend.length === 1}
+                    dot={
+                      s.trend.length === 1 ||
+                      (chartKey === "value" &&
+                        s.trend.some((point) => point.value === null))
+                    }
                     activeDot={{ r: 5, stroke: "white", strokeWidth: 3 }}
                     isAnimationActive={false}
+                    connectNulls={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           ) : (
             <Empty
-              title={mapping.date ? "当前范围没有日期数据" : "让变化变得可见"}
+              title={
+                mapping.date
+                  ? s.trend.length && !hasTrendValue
+                    ? "当前范围无有效数值"
+                    : "当前范围没有日期数据"
+                  : "让变化变得可见"
+              }
             >
-              在上方选择日期字段，即可生成每日汇总。
+              {mapping.date
+                ? "检查日期、指标和筛选范围；没有有效数值的日期不会按零绘制。"
+                : "在上方选择日期字段，即可生成每日汇总。"}
             </Empty>
           )}
           <div className="chart-caption">
             <TrendingUp size={14} />
-            <span>仅汇总源数据中出现的日期；缺失日期不补零。</span>
+            <span>
+              按 UTC 日期汇总；缺失日期不补零，无有效数值的日期保留断点。
+              {isPercent && " 百分比按记录等权平均，不代表加权整体比例。"}
+            </span>
           </div>
         </section>
         <section className="panel ranking-panel">
@@ -233,16 +274,24 @@ export default function Overview({
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span title={g.name}>{g.name}</span>
-                    <strong>{number(g.value, 2)}</strong>
+                    <strong>{formatValue(g.value)}</strong>
                   </div>
-                  <div className="bar-track">
-                    <div
-                      className={`bar bar-${i % 4}`}
-                      style={{
-                        width: `${Math.max(0, (Math.abs(g.value) / maxGroup) * 100)}%`,
-                      }}
-                    />
-                  </div>
+                  {g.value !== null && (
+                    <div className="bar-track">
+                      <div
+                        className={`bar bar-${i % 4}`}
+                        style={{
+                          width: `${Math.max(0, (Math.abs(g.value) / maxGroup) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                  {mapping.metric && (
+                    <small className="muted">
+                      有效 {g.validValues} / {g.count} 条
+                      {g.excludedValues ? ` · 排除 ${g.excludedValues} 条` : ""}
+                    </small>
+                  )}
                 </div>
               ))}
             </div>
@@ -252,8 +301,8 @@ export default function Overview({
             </Empty>
           )}
           <div className="ranking-footer">
-            共 {s.groupCount} 组 · 按
-            {mapping.metric ? `${mapping.metric}合计` : "记录数量"}降序取前 8 组
+            共 {s.groupCount} 组 · 按{mapping.metric ? metricLabel : "记录数量"}
+            降序取前 8 组，无有效数值的组排在末尾
           </div>
         </section>
       </div>

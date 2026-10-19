@@ -10,12 +10,24 @@ import {
   diagnose,
   csvExport,
   selection,
+  profile,
+  PROFILE_VERSION,
 } from "./data.mjs";
 
 export function createApp({ directory = ".data" } = {}) {
   const app = express();
   const store = createStore(directory);
   if (!store.get("demo-orders-v1")) store.save(makeDemo());
+  // Refresh inferred metadata for previously imported files; preserve raw rows and notes.
+  for (const dataset of store.list()) {
+    if (dataset.profileVersion !== PROFILE_VERSION) {
+      store.save({
+        ...dataset,
+        columns: profile(dataset.headers, dataset.rows),
+        profileVersion: PROFILE_VERSION,
+      });
+    }
+  }
   app.locals.store = store;
   app.disable("x-powered-by");
   app.use("/api", (req, res, next) => {
@@ -149,16 +161,14 @@ export function createApp({ directory = ".data" } = {}) {
   app.use((err, _req, res, _next) => {
     const status = err.type === "entity.too.large" ? 413 : err.status || 500;
     if (status >= 500) console.error(err);
-    res
-      .status(status)
-      .json({
-        error:
-          status === 413
-            ? "文件或请求过大，CSV 上限为 5 MB。"
-            : status >= 500
-              ? "服务处理失败，请查看终端日志后重试。"
-              : err.message,
-      });
+    res.status(status).json({
+      error:
+        status === 413
+          ? "文件或请求过大，CSV 上限为 5 MB。"
+          : status >= 500
+            ? "服务处理失败，请查看终端日志后重试。"
+            : err.message,
+    });
   });
   return app;
 }

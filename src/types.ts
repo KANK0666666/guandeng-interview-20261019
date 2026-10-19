@@ -2,6 +2,8 @@ export type View = "overview" | "records" | "diagnostics";
 export type Column = {
   name: string;
   type: "number" | "date" | "text";
+  format?: "number" | "percent";
+  warning?: string;
   missing: number;
   invalid: number;
   unique: number;
@@ -44,20 +46,35 @@ export type RowsPage = {
 export type Summary = {
   count: number;
   metric: string;
+  metricFormat: "number" | "percent";
+  aggregation: "sum" | "mean" | "count";
   total: number | null;
   average: number | null;
   validValues: number;
   excludedValues: number;
   completeness: number | null;
   groupCount: number;
-  groups: { name: string; count: number; value: number }[];
-  trend: { name: string; count: number; value: number }[];
+  groups: {
+    name: string;
+    count: number;
+    value: number | null;
+    validValues: number;
+    excludedValues: number;
+  }[];
+  trend: {
+    name: string;
+    count: number;
+    value: number | null;
+    validValues: number;
+    excludedValues: number;
+  }[];
 };
 export type Rule = { ruleField: string; op: string; threshold: string };
 export type Diagnosis = {
   field: string;
   op: string;
   threshold: number;
+  format: "number" | "percent";
   evaluated: number;
   excluded: number;
   matched: number;

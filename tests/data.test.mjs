@@ -103,6 +103,181 @@ test("summaries use valid denominators and retain zero-result semantics", () => 
   assert.equal(none.count, 0);
   assert.equal(none.average, null);
   assert.equal(none.completeness, null);
+  assert.equal(none.total, null);
+});
+test("missing group/day values stay unknown while true zero and negative values remain numeric", () => {
+  const d = parseCsv(
+    Buffer.from(
+      "日期,渠道,金额\n2026-10-01,A,10\n2026-10-02,B,\n2026-10-03,C,0\n2026-10-04,D,-5",
+    ),
+  );
+  const s = summarize(
+    d,
+    new URLSearchParams({ metric: "金额", group: "渠道", date: "日期" }),
+  );
+  assert.deepEqual(
+    s.groups.map((g) => [g.name, g.value]),
+    [
+      ["A", 10],
+      ["C", 0],
+      ["D", -5],
+      ["B", null],
+    ],
+  );
+  assert.deepEqual(
+    s.trend.map((g) => g.value),
+    [10, null, 0, -5],
+  );
+  assert.equal(s.groups[3].validValues, 0);
+  assert.equal(s.groups[3].excludedValues, 1);
+  const blank = summarize(
+    d,
+    new URLSearchParams({ metric: "金额", filter: "渠道", value: "B" }),
+  );
+  assert.equal(blank.total, null);
+  assert.equal(blank.average, null);
+  const counts = summarize(
+    d,
+    new URLSearchParams({ group: "渠道", date: "日期" }),
+  );
+  assert.deepEqual(
+    counts.trend.map((g) => g.value),
+    [1, 1, 1, 1],
+  );
+});
+test("invalid numeric values do not manufacture a zero-only group", () => {
+  const d = parseCsv(
+    Buffer.from("渠道,金额\n" + "A,10\n".repeat(9) + "B,未知"),
+  );
+  const s = summarize(
+    d,
+    new URLSearchParams({ metric: "金额", group: "渠道" }),
+  );
+  assert.equal(d.columns[1].invalid, 1);
+  assert.equal(s.groups[1].value, null);
+});
+test("percent columns retain source text and produce means without summed rates", () => {
+  const d = parseCsv(
+    Buffer.from(
+      "日期,渠道,转化率\n20261001,A,12.5%\n20261001,A,7.5％\n20261002,B,0%\n20261003,C,",
+    ),
+  );
+  assert.equal(d.rows[0].转化率, "12.5%");
+  assert.equal(d.columns[0].type, "date");
+  assert.equal(d.columns[2].format, "percent");
+  assert.equal(numeric("12.5%", "percent"), 0.125);
+  assert.equal(numeric("12.5", "percent"), null);
+  const s = summarize(
+    d,
+    new URLSearchParams({ metric: "转化率", group: "渠道", date: "日期" }),
+  );
+  assert.equal(s.total, null);
+  assert.equal(s.aggregation, "mean");
+  assert.equal(s.average, 0.2 / 3);
+  assert.deepEqual(
+    s.groups.map((g) => [g.name, g.value]),
+    [
+      ["A", 0.1],
+      ["B", 0],
+      ["C", null],
+    ],
+  );
+  assert.deepEqual(
+    s.trend.map((g) => g.value),
+    [0.1, 0, null],
+  );
+  assert.equal(s.validValues, 3);
+  assert.equal(s.excludedValues, 1);
+});
+test("mixed percentage units remain text with an actionable warning", () => {
+  const d = parseCsv(Buffer.from("渠道,转化率\nA,12.5%\nB,0.125"));
+  assert.equal(d.columns[1].type, "text");
+  assert.match(d.columns[1].warning, /混用/);
+  assert.equal(d.rows[1].转化率, "0.125");
+  assert.throws(() => summarize(d, new URLSearchParams({ metric: "转化率" })));
+});
+test("percentage diagnostics, sorting and exports use consistent units", () => {
+  const d = parseCsv(Buffer.from("渠道,转化率\nA,2%\nB,12.5%\nC,9%\nD,"));
+  const result = diagnose(
+    d,
+    new URLSearchParams({ ruleField: "转化率", op: "gte", threshold: "12.5" }),
+  );
+  assert.equal(result.format, "percent");
+  assert.equal(result.threshold, 12.5);
+  assert.equal(result.evaluated, 3);
+  assert.equal(result.excluded, 1);
+  assert.deepEqual(
+    result.rows.map((r) => r.id),
+    ["2"],
+  );
+  assert.deepEqual(
+    pageRows(
+      d,
+      new URLSearchParams({ sort: "转化率", direction: "desc" }),
+    ).rows.map((r) => r.id),
+    ["2", "3", "1", "4"],
+  );
+  const exported = parse(csvExport(["百分比"], [{ 百分比: "-12.5%" }]), {
+    bom: true,
+    columns: true,
+  });
+  assert.equal(exported[0].百分比, "-12.5%");
+});
+test("calendar dates and explicit timezones normalize consistently without guessing timestamp units", () => {
+  assert.equal(day("20261001"), "2026-10-01");
+  assert.equal(day("202610"), "2026-10-01");
+  assert.equal(day("2026"), "2026-01-01");
+  assert.equal(day("2026/10"), "2026-10-01");
+  assert.equal(day("2026-10-01 10:30:00"), "2026-10-01");
+  assert.equal(day("2026-10-01T00:30:00+08:00"), "2026-09-30");
+  assert.equal(day("20260230"), null);
+  assert.equal(day("2026-02-30 10:30:00"), null);
+  assert.equal(day("2026-10-01 24:00:00"), null);
+  assert.equal(day("1790812800"), null);
+  assert.equal(day("46000"), null);
+  const d = parseCsv(
+    Buffer.from(
+      "日期,金额\n20261002,10\n2026-10-01 10:30:00,20\n2026-10-01T00:30:00+08:00,30",
+    ),
+  );
+  assert.equal(d.columns[0].type, "date");
+  assert.deepEqual(
+    pageRows(d, new URLSearchParams({ sort: "日期" })).rows.map((r) => r.id),
+    ["3", "2", "1"],
+  );
+  const s = summarize(
+    d,
+    new URLSearchParams({
+      metric: "金额",
+      date: "日期",
+      from: "20261001",
+      to: "20261002",
+    }),
+  );
+  assert.equal(s.total, 30);
+  assert.equal(s.count, 2);
+});
+test("date detection protects IDs and ordinary numeric columns, and reports invalid dates", () => {
+  const d = parseCsv(
+    Buffer.from(
+      "用户ID,orderId,金额,processing_time,日期\n20261001,20261001,20261001,12,20261001\n20261002,20261002,20261002,24,20261002",
+    ),
+  );
+  assert.deepEqual(
+    d.columns.map((c) => c.type),
+    ["text", "text", "number", "number", "date"],
+  );
+  const invalid = parseCsv(
+    Buffer.from("日期,金额\n" + "20261001,10\n".repeat(9) + "20260230,10"),
+  );
+  assert.equal(invalid.columns[0].type, "date");
+  assert.equal(invalid.columns[0].invalid, 1);
+  const s = summarize(
+    invalid,
+    new URLSearchParams({ date: "日期", metric: "金额" }),
+  );
+  assert.equal(s.count, 10);
+  assert.equal(s.trend[0].count, 9);
 });
 test("search, exact groups, inclusive dates, empty filters and input validation", () => {
   const d = fixture();

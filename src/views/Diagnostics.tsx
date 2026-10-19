@@ -66,6 +66,12 @@ export default function Diagnostics({
     setRule({ ...draft });
   };
   const changed = rule && JSON.stringify(draft) !== JSON.stringify(rule);
+  const percentField =
+    dataset.columns.find((c) => c.name === draft.ruleField)?.format ===
+    "percent";
+  const ruleDescription = d
+    ? `${d.field} ${operators.find((o) => o.value === d.op)?.label} ${number(d.threshold, 6)}${d.format === "percent" ? "%" : ""}`
+    : "";
   return (
     <div className="view-content">
       <section className="panel rule-builder">
@@ -101,7 +107,7 @@ export default function Diagnostics({
             empty={false}
           />
           <label className="field">
-            <span>阈值</span>
+            <span>{percentField ? "阈值（%，12.5 表示 12.5%）" : "阈值"}</span>
             <input
               type="number"
               step="any"
@@ -139,7 +145,7 @@ export default function Diagnostics({
             <Stat
               label="规则命中"
               value={number(d.matched)}
-              detail={`${d.field} ${operators.find((o) => o.value === d.op)?.label} ${d.threshold}`}
+              detail={ruleDescription}
               icon={<Target size={18} />}
               accent
             />
@@ -172,7 +178,10 @@ export default function Diagnostics({
                   核查清单{" "}
                   <span className="count-badge">{number(d.matched)}</span>
                 </h2>
-                <p>按检查字段排序，优先查看偏离阈值更远的记录</p>
+                <p>
+                  当前规则：{ruleDescription} ·
+                  表内保留检查值，按偏离阈值程度排序
+                </p>
               </div>
               <ExportLink
                 href={`/api/datasets/${dataset.id}/export?${query}&${parameters(rule!)}`}
@@ -184,9 +193,11 @@ export default function Diagnostics({
               rows={d.rows}
               onOpen={onOpen}
               compact
+              priorityColumns={[d.field]}
             />
             <div className="table-footnote">
-              页面最多展示 100 条、前 6 个字段；导出包含全部命中记录和全部字段。
+              页面最多展示 100 条、6
+              个字段，优先保留首列标识和检查字段；导出包含全部命中记录和全部字段。
             </div>
           </section>
         </>
