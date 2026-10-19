@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+
+# 生成结果按正式任务决定是否提交；确认后用 git add -f 加入交付文件。
+out/
+index.html
+preview.png

@@ -1,0 +1,4 @@
+# 在 Python 3.13.1 上验证；这些依赖需要 Python >=3.12。
+pandas==3.0.0
+numpy==2.2.0
+scipy==1.18.0

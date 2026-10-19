@@ -12,7 +12,9 @@
     "start": "node server/index.mjs --production",
     "test": "node --test tests/*.test.mjs",
     "template": "node scripts/select-template.mjs",
-    "check": "npm test && npm run build"
+    "check": "npm test && npm run build",
+    "check:all": "npm run check && bash exam-kit/run.sh --test",
+    "analyze": "bash exam-kit/run.sh"
   },
   "dependencies": {
     "csv-parse": "7.0.3",

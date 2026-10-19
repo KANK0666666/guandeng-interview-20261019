@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f6f8fb;
+    --up:#0ea36a; --down:#e0483d; --card:#fff; --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+         "Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 22px 70px}
+  header h1{font-size:25px;margin:0 0 8px;letter-spacing:-.3px}
+  .meta{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 18px}
+  .meta b{color:var(--ink);font-weight:600}
+  h2{font-size:15px;margin:38px 0 14px;letter-spacing:.4px;color:#334155;
+     display:flex;align-items:center;gap:9px}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;
+        padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .grid{display:grid;gap:13px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(212px,1fr))}
+  .kpi .k{font-size:12px;color:var(--muted);letter-spacing:.3px}
+  .kpi .v{font-size:24px;font-weight:650;margin:5px 0 2px;letter-spacing:-.5px}
+  .kpi .s{font-size:12px;color:var(--muted)}
+  .finding{display:flex;gap:13px;align-items:flex-start}
+  .finding + .finding{margin-top:13px}
+  .badge{flex:0 0 auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+         letter-spacing:.3px;margin-top:3px}
+  .b-fact{background:#e7f8f0;color:#0b7a4f;border:1px solid #b6ead4}
+  .b-risk{background:#fff7e6;color:#a35b00;border:1px solid #ffe0a8}
+  .b-explore{background:#f1f3f7;color:#5b6472;border:1px solid #dfe4ec}
+  .finding .t{font-weight:600;margin-bottom:3px}
+  .finding .d{color:var(--muted);font-size:13.5px}
+  .finding .num{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+  th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.3px;
+     background:#fbfcfe;position:sticky;top:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .dim{color:var(--muted)}
+  .scroll{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:11px}
+  ul.limit{margin:0;padding-left:19px;color:#475569;font-size:13.5px}
+  ul.limit li{margin:5px 0}
+  .empty{color:var(--muted);font-size:13.5px;padding:8px 0}
+  footer{margin-top:44px;color:#94a3b8;font-size:12px;line-height:1.8}
+  .btn{float:right;font:12px/1 -apple-system,sans-serif;padding:7px 13px;cursor:pointer;
+       background:#fff;border:1px solid var(--line);border-radius:8px;color:#475569}
+  .btn:hover{border-color:#cbd5e1;color:var(--ink)}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  svg text{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .axis{stroke:#cbd5e1;stroke-width:1}
+  .glabel{fill:#334155;font-size:12.5px}
+  .gval{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .gn{fill:#94a3b8;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>__TITLE__</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <p class="card dim" id="notice" style="font-size:13px;margin-top:18px"></p>
+
+  <h2>探索摘要 <button class="btn" id="copyBtn">复制为 Markdown</button></h2>
+  <div class="card" id="findings"></div>
+
+  <h2>关键数字</h2>
+  <div class="grid kpis" id="kpis"></div>
+
+  <h2 id="segTitle">分组对比</h2>
+  <div class="card" id="segChart"></div>
+  <div class="card" id="segTable" style="margin-top:13px;padding:0;overflow:hidden"></div>
+
+  <h2>时间切片描述</h2>
+  <div class="card" id="timeBox"></div>
+
+  <h2>数据画像</h2>
+  <div class="scroll" id="profile"></div>
+
+  <h2>局限与待核查事项</h2>
+  <div class="card"><ul class="limit" id="limits"></ul></div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('payload').textContent);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = v => v === null || v === undefined || !Number.isFinite(v) ? '—' : (v !== 0 && Math.abs(v) < .0001 ? v.toExponential(3) : v.toLocaleString('zh-CN', {maximumFractionDigits: 4}));
+const signed = v => v === null || v === undefined ? '—' : (v > 0 ? '+' : '') + fmt(v);
+const ptext = v => v === null || v === undefined ? '未检验' : (v < .001 ? '<0.001' : v.toPrecision(4));
+const o = D.overview, seg = D.segments, b = D.baseline;
+const rate = ['rate', 'binary'].includes(o.metric_kind);
+const metricFmt = v => v === null || v === undefined ? '—' : rate ? fmt(v * 100) + '%' : fmt(v);
+const diffFmt = v => v === null || v === undefined ? '—' : rate ? signed(v * 100) + ' 个百分点' : signed(v);
+const direction = {neutral: '未指定，不判优劣', higher: '越高越好（用户指定）', lower: '越低越好（用户指定）'}[o.direction];
+const color = v => o.direction === 'neutral' ? '#2563eb' : v === 0 ? '#64748b' : ((o.direction === 'lower' ? -v : v) > 0 ? '#0b875c' : '#c33c32');
+$('meta').innerHTML = [
+  ['数据', D.file], ['规模', `${o.rows} 行 × ${o.cols} 列`],
+  ['时间', o.date_range ? o.date_range.join(' ~ ') : '无可用日期'],
+  ['指标', `${o.metric}${D.selection.metric_auto ? '（自动，待确认）' : ''}`],
+  ['分组', `${o.group || '无'}${o.group && D.selection.group_auto ? '（自动，待确认）' : ''}`],
+  ['方向', direction], ['生成', D.generated_at]
+].map(([k,v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join('');
+$('notice').textContent = '这是历史数据的描述性探索。标题不定义指标；分组差异不代表采取措施后的收益。' + D.inference.reason;
+$('findings').innerHTML = D.findings.length ? D.findings.map(f => `
+  <div class="finding"><span class="badge ${f.status === '需核查' ? 'b-risk' : 'b-explore'}">${esc(f.status)}</span>
+  <div><div class="t">${esc(f.title)}</div><div class="d">${esc(f.detail)}</div></div></div>`).join('')
+  : '<div class="empty">未生成自动发现；不代表不存在信号，请检查字段、样本量与分析方法。</div>';
+const focus = seg?.levels[0], conc = D.concentration;
+const kpi = (key,value,note) => `<div class="card kpi"><div class="k">${esc(key)}</div><div class="v">${esc(value)}</div><div class="s">${esc(note)}</div></div>`;
+$('kpis').innerHTML = [
+  kpi('样本参照均值', metricFmt(b.mean), `中位数 ${metricFmt(b.median)} · 有效 n=${b.n}`),
+  focus ? kpi(`观察分组：${focus.level}`, metricFmt(focus.mean), `与全样本差值 ${diffFmt(focus.difference)} · n=${focus.n}`) : '',
+  kpi('时间切片', D.time?.status || '未形成可比较切片', D.time ? `${D.time.k} 段 · ${D.time.span_days} 天 · 同一天不跨段` : '需要可解析日期和足够样本'),
+  conc ? kpi('前 10% 实体的总量占比', fmt(conc.top10pct_share) + '%', `取前 ${conc.top10_n} / ${conc.n_entities} 个已知实体 · 数量向上取整`) : ''
+].join('');
+function bars(rows, options = {}) {
+  rows = rows.filter(r => Number.isFinite(r.value));
+  if (!rows.length) return '<div class="empty">有效样本不足，未绘制差异图。</div>';
+  const W=960, LH=210, RESERVED=225, PH=W-LH-RESERVED, H=rows.length*38+24;
+  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.value)), 1e-12);
+  const div=options.diverging, zero=div?LH+PH/2:LH, width=div?PH/2-14:PH-14;
+  let chart='';
+  rows.forEach((r,i)=>{
+    const y=12+i*38, w=Math.abs(r.value)/maxAbs*width, x=div&&r.value<0?zero-w:zero;
+    const c=options.neutral?'#2563eb':color(r.value);
+    chart+=`<text class="glabel" x="${LH-12}" y="${y+14}" text-anchor="end"><title>${esc(r.label)}</title>${esc(r.label.length>24?r.label.slice(0,23)+'…':r.label)}</text>
+      <rect x="${x}" y="${y}" width="${w}" height="18" rx="3" fill="${c}"/>
+      <text class="gval" x="${div&&r.value<0?x-7:x+w+7}" y="${y+14}" fill="${c}" text-anchor="${div&&r.value<0?'end':'start'}">${esc(r.text)}</text>
+      <text class="gn" x="${W-5}" y="${y+14}" text-anchor="end">${esc(r.sub||'')}</text>`;
+  });
+  if(div) chart+=`<line class="axis" x1="${zero}" x2="${zero}" y1="4" y2="${H-6}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(options.label || '数据对比图')}">${chart}</svg>`;
+}
+if(seg){
+  $('segTitle').textContent=`分组描述：${seg.group} × ${seg.metric}`;
+  $('segChart').innerHTML=bars(seg.levels.map(l=>({label:l.level, value:l.difference, text:diffFmt(l.difference), sub:`n=${l.n}`})),{diverging:true, label:'分组均值与全样本均值的差值'})
+    + `<div class="empty">参照均值 ${esc(metricFmt(seg.baseline_mean))}；图中展示绝对差值。${esc(seg.inference.reason)}${seg.inference.enabled ? ' 本维度校正范围 '+seg.family_size+' 个比较；p 值比较本组与其他组。' : ''}</div>`;
+  const rows=seg.levels.map(l=>`<tr><td>${esc(l.level)}</td><td class="num">${l.n}</td><td class="num">${fmt(l.row_share_pct)}%</td>
+    <td class="num">${metricFmt(l.mean)}</td><td class="num">${diffFmt(l.difference)}</td>
+    <td class="num">${l.lift_pct===null?'不适用':signed(l.lift_pct)+'%'}</td>
+    ${rate?'':`<td class="num">${fmt(l.total)}</td><td class="num">${l.value_share_pct===null?'不适用':fmt(l.value_share_pct)+'%'}</td>`}
+    <td class="num">${ptext(l.p_value)}</td><td class="num">${ptext(l.p_adjusted)}</td>
+    <td>${l.significant_bonferroni===null?'未检验':l.significant_bonferroni?'本维度校正后显著':'未达校正阈值'}</td></tr>`).join('');
+  $('segTable').innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>${esc(seg.group)}</th><th>有效 n</th><th>有效行占比</th><th>均值</th><th>绝对差值</th><th>相对差异</th>
+    ${rate?'':'<th>合计</th><th>总量占比</th>'}<th>原始 p</th><th>调整后 p</th><th>判定</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}else{
+  const dist=D.distribution;
+  $('segTitle').textContent=`${o.metric} 的分布`;
+  $('segChart').innerHTML=dist?bars(dist.bins.map(x=>({label:x.label,value:x.count,text:String(x.count)})),{neutral:true,label:'指标分布'})
+    +'<div class="empty">未形成至少两个有效分组；展示分布，不对差异作统计判断。</div>':'<div class="empty">没有可展示的分布。</div>';
+  $('segTable').hidden=true;
+}
+if(D.time){
+  const t=D.time;
+  let view=bars(t.slices.map(s=>({label:`${s.label} ${s.start}~${s.end}`, value:s.mean, text:metricFmt(s.mean), sub:`n=${s.n}`})), {neutral:true,diverging:t.slices.some(s=>s.mean<0),label:'各时期指标均值'});
+  const comparisons=t.slices.filter(s=>s.focus_difference!==null&&s.focus_difference!==undefined);
+  if(comparisons.length){
+    view+=`<p class="dim">「${esc(t.focus_level)}」与同期样本均值的差值</p>`+bars(comparisons.map(s=>({label:s.label,value:s.focus_difference,text:diffFmt(s.focus_difference),sub:`组内 n=${s.focus_n}`})),{diverging:true,label:'观察分组各时期差值'});
+  }
+  view+=`<div class="empty">${esc(t.status)}。切片按有效日期顺序分段，各段可有不同样本量；方向一致也不构成样本外验证。</div>`;
+  $('timeBox').innerHTML=view;
+}else{
+  $('timeBox').textContent='未形成可比较的时间切片：可能缺少日期、有效日期过少或有效样本不足。';
+}
+$('profile').innerHTML=`<table><thead><tr><th>列名</th><th>类型</th><th>非空</th><th>缺失率</th><th>唯一值</th><th>样例</th></tr></thead><tbody>${D.profile.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.dtype)}</td><td>${p.n}</td><td>${fmt(p.missing_pct)}%</td><td>${p.nunique}</td><td style="max-width:300px;overflow-wrap:anywhere">${esc(p.sample)}</td></tr>`).join('')}</tbody></table>`;
+$('limits').innerHTML=D.limitations.map(l=>`<li>${esc(l)}</li>`).join('');
+$('foot').innerHTML=`analysis.py · Python ${esc(D.environment.python)} / pandas ${esc(D.environment.pandas)} / SciPy ${esc(D.environment.scipy||'未安装')}<br>复现命令：<code>${esc(D.reproduce_command)}</code><br>页面可离线查看；重新计算需要安装 Python 依赖。截图为单独生成的静态产物。`;
+$('copyBtn').onclick=async()=>{
+  const md=['## 描述性探索','',...D.findings.map((f,i)=>`${i+1}. **${f.title}**（${f.status}）\n   ${f.detail}`),'','## 数据与方法','',
+    `- 数据：${D.file}，${o.rows} 行 × ${o.cols} 列`,`- 指标：${o.metric}；分组：${o.group||'无'}；方向：${direction}`,
+    `- 样本参照：均值 ${metricFmt(b.mean)}，有效 n=${b.n}`,`- ${D.inference.reason}`,'','## 局限','',...D.limitations.map(l=>'- '+l),'','## 复现','', '```bash',D.reproduce_command,'```'].join('\n');
+  try{await navigator.clipboard.writeText(md);$('copyBtn').textContent='已复制 ✓';}
+  catch(e){$('copyBtn').textContent='复制失败，请手动选中';}
+};
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@ npm run dev
 
 ```bash
 npm run check  # 数据/API 测试 + TypeScript 检查 + 生产构建
+npm run check:all  # 再检查 exam-kit 的 CSV 分析和报告生成
 npm start      # 先构建，再以生产模式启动同一个本地服务
 ```
 
@@ -29,6 +30,8 @@ npm start      # 先构建，再以生产模式启动同一个本地服务
 | C · 规则诊断   | `/?view=diagnostics` | 超时、低库存等明确阈值场景       | 设置规则 → 核对分母与命中数 → 核查记录 → 导出清单 |
 
 三套模板共用上传、筛选和后端。正式任务应选择最能帮助目标用户作决定的一套，再补题目需要的业务逻辑。
+
+另备有 [`exam-kit`](exam-kit/README.md)：用于快速检查 CSV、描述性统计及生成离线报告。根目录执行 `npm run analyze -- --file data/sample_orders.csv` 可跑人工示例；真实文件建议使用绝对路径，再按任务指定指标和分组。两个工具各自记录统计口径，正式答题选定后再统一单位和日期规则。
 
 页面预览：[A · 数据概览](docs/previews/overview.jpg) · [B · 记录工作台](docs/previews/records.jpg) · [C · 规则诊断](docs/previews/diagnostics.jpg)
 
