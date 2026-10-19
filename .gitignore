@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.data/
+.env
+.env.*
+!.env.example
+.DS_Store
+artifacts/
+coverage/
+*.log
+private-inputs/
