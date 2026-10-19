@@ -52,6 +52,13 @@ type Job = {
   intercept: boolean;
   reason: string;
 };
+type Group = Counts & {
+  name: string;
+  below: Counts;
+  above: Counts;
+  policy: Policy;
+};
+type Fraction = { numerator: number; denominator: number; value: number };
 type Metrics = {
   source: {
     rawRows: number;
@@ -69,8 +76,33 @@ type Metrics = {
   lagGroups: ({ name: string } & Counts)[];
   candidates: { id: string; label: string; train: Policy }[];
   baselines: { id: string; label: string; all: Policy; validation: Policy }[];
-  byDay: ({ name: string } & Counts)[];
-  byTeam: ({ name: string } & Counts)[];
+  byDay: Group[];
+  byTeam: Group[];
+  ruleSensitivity: {
+    segments: {
+      from: Fraction;
+      to: Fraction;
+      label: string;
+      preferredRuleId: string;
+      intercepted: number;
+      caughtFailures: number;
+    }[];
+    boundaries: {
+      effectiveness: Fraction;
+      ruleIds: string[];
+      preferredRuleId: string;
+      label: string;
+    }[];
+  };
+  stratification: {
+    groups: {
+      dimension: string;
+      total: number;
+      comparable: number;
+      positive: number;
+    }[];
+    caveat: string;
+  };
   split: { caveat: string };
 };
 type Report = { metrics: Metrics; rows: Job[] };
@@ -80,9 +112,11 @@ type CheckResult = {
   reason: string;
 };
 const n = (v: number) =>
-  v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
+  v.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 const pct = (v: number | null) =>
   v === null ? "—" : `${(v * 100).toFixed(1)}%`;
+const pct2 = (v: number | null) =>
+  v === null ? "—" : `${(v * 100).toFixed(2)}%`;
 const localInput = (v: string) =>
   new Date(Date.parse(v) + 8 * 3600000).toISOString().slice(0, 16);
 const date = (v: string) =>
@@ -197,6 +231,17 @@ export default function RenderApp() {
     (p.caughtFailures * m.costs.crash * effect) / 100 - p.interceptCost;
   const vnet =
     (v.caughtFailures * m.costs.crash * effect) / 100 - v.interceptCost;
+  const scenarioBest = [...m.candidates].sort((a, b) => {
+    const difference =
+      ((b.train.caughtFailures - a.train.caughtFailures) *
+        m.costs.crash *
+        effect) /
+        100 -
+      (b.train.interceptCost - a.train.interceptCost);
+    return Math.abs(difference) > 1e-9
+      ? difference
+      : a.train.intercepted - b.train.intercepted;
+  })[0];
   return (
     <div className="render-app">
       <aside className="rc-sidebar">
@@ -540,7 +585,10 @@ export default function RenderApp() {
                         <SlidersHorizontal size={18} />
                         拦截不一定消除失败
                       </h2>
-                      <p>设 α 为核查/同步后真正避免原有失败的比例。</p>
+                      <p>
+                        设 α
+                        为核查/同步后真正避免原有失败的比例；提醒是否被执行也影响这个比例。
+                      </p>
                     </div>
                   </div>
                   <label className="rc-slider-label">
@@ -550,7 +598,7 @@ export default function RenderApp() {
                       type="range"
                       min="0"
                       max="100"
-                      step="5"
+                      step="1"
                       value={effect}
                       onChange={(e) => setEffect(Number(e.target.value))}
                     />
@@ -664,6 +712,158 @@ export default function RenderApp() {
                   </table>
                 </div>
               </section>
+              <section className="rc-panel">
+                <div className="rc-panel-heading">
+                  <div>
+                    <h2>有效比例变化时，最优候选也会变化</h2>
+                    <p>
+                      开发期 35 项候选的完整区间比较。所有候选暂用同一个
+                      α；不代表未来最优或真实干预效果。
+                    </p>
+                  </div>
+                </div>
+                <div className="rc-notice">
+                  当前 {effect}% 情景下，开发期最优候选为{" "}
+                  <strong>{scenarioBest.label}</strong>。 预检仍采用初版固定的
+                  20 分钟规则。
+                </div>
+                <div className="rc-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>α 区间内部</th>
+                        <th>开发期最优候选</th>
+                        <th>拦截数</th>
+                        <th>命中失败</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m.ruleSensitivity.segments.map((segment) => (
+                        <tr key={segment.preferredRuleId}>
+                          <td>
+                            {pct2(segment.from.value)}—{pct2(segment.to.value)}
+                          </td>
+                          <td>{segment.label}</td>
+                          <td>{segment.intercepted}</td>
+                          <td>{segment.caughtFailures}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="rc-fineprint">
+                  精确切点：
+                  {m.ruleSensitivity.boundaries
+                    .filter((b) => b.ruleIds.length > 1)
+                    .map(
+                      (b) =>
+                        `${b.effectiveness.numerator}/${b.effectiveness.denominator}（约 ${pct2(b.effectiveness.value)}），平局取“${b.label}”`,
+                    )
+                    .join("；")}
+                  。端点附近以精确分数为准，不能把盈亏平衡点当成最优规则的切换点。
+                </p>
+              </section>
+              <section className="rc-panel">
+                <div className="rc-panel-heading">
+                  <div>
+                    <h2>团队差异会影响核查是否值得做</h2>
+                    <p>
+                      全量历史、固定同步间隔 ≥20
+                      分钟规则。失败率只计已知结果，成本计入全部命中任务。
+                    </p>
+                  </div>
+                </div>
+                <div className="rc-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>团队</th>
+                        <th>&lt;20 分钟失败率</th>
+                        <th>≥20 分钟失败率</th>
+                        <th>命中 / 其中未知</th>
+                        <th>α={effect}% 净工时</th>
+                        <th>盈亏平衡 α</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m.byTeam.map((group) => {
+                        const benefit =
+                          (group.policy.caughtFailures *
+                            m.costs.crash *
+                            effect) /
+                            100 -
+                          group.policy.interceptCost;
+                        return (
+                          <tr key={group.name}>
+                            <td>{group.name}</td>
+                            <td>
+                              {pct2(group.below.failureRate)}
+                              <small>
+                                {group.below.failed} / {group.below.known}
+                              </small>
+                            </td>
+                            <td>
+                              {pct2(group.above.failureRate)}
+                              <small>
+                                {group.above.failed} / {group.above.known}
+                              </small>
+                            </td>
+                            <td>
+                              {group.policy.intercepted} /{" "}
+                              {group.policy.interceptedUnknown}
+                            </td>
+                            <td className={benefit < 0 ? "rc-negative" : ""}>
+                              {n(benefit)}
+                            </td>
+                            <td>{pct2(group.policy.breakEvenEffectiveness)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="rc-fineprint">
+                  海外定制组命中 69 个任务，含 1 个未知；50% 情景净损失 600
+                  工时，盈亏点约
+                  88.46%。分组结果是探索发现，尚未据此排除团队或另定阈值，应先确认任务结构、采集口径和干预效果。
+                </p>
+              </section>
+              <section className="rc-panel">
+                <div className="rc-panel-heading">
+                  <div>
+                    <h2>分层之后，关联是否仍然存在</h2>
+                    <p>
+                      分别比较每个分组内的 ≥20 分钟与 &lt;20
+                      分钟已知结果失败率。
+                    </p>
+                  </div>
+                </div>
+                <div className="rc-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>分层维度</th>
+                        <th>可比较分组</th>
+                        <th>高同步间隔失败率更高的分组</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m.stratification.groups.map((group) => (
+                        <tr key={group.dimension}>
+                          <td>{group.dimension}</td>
+                          <td>
+                            {group.comparable} / {group.total}
+                          </td>
+                          <td>
+                            {group.positive} / {group.comparable}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="rc-fineprint">{m.stratification.caveat}</p>
+              </section>
               <div className="rc-two-col">
                 <section className="rc-panel">
                   <div className="rc-panel-heading">
@@ -730,6 +930,10 @@ export default function RenderApp() {
                 </p>
                 <p>
                   最后同步完成时间不等于资产变更时间。这里能确认的是关联，尚不能确认根因；没有更长的对照窗口，也无法证明近期失败频度上升。显存与面数沿用原数据单位，不推测倍率。
+                </p>
+                <p>
+                  当前按题目每次 20
+                  工时记账，不能仅因界面是提醒就自行降低成本。上线前需确认同步时间是否为提交时快照，测量提醒响应、核查耗时与实际避免失败的比例；若任务共享资产，需要考虑按资产或团队分组实验。
                 </p>
                 <small>来源 SHA-256：{m.source.sha256}</small>
               </section>

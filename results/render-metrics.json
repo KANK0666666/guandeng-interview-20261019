@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "path": "data/render_jobs.csv",
     "sha256": "f7674deda7ae2f49cd878073083550acd7e82d765e8675fa694736485cd4b658",
@@ -50,7 +50,7 @@
     "label": "同步间隔 ≥ 20 分钟",
     "lagMinutes": 20,
     "usesOutcome": false,
-    "action": "先核对资产版本并同步，完成后重新预检；每个唯一 job_id 最多计一次拦截成本。"
+    "action": "先核对资产版本，必要时同步后重新预检；每个唯一 job_id 在模型中最多计一次拦截成本。"
   },
   "split": {
     "trainThrough": "2026-09-05",
@@ -494,6 +494,48 @@
             "netHours": 5800
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 76,
+        "caughtFailures": 31,
+        "falseInterceptions": 45,
+        "interceptedUnknown": 0,
+        "missedFailures": 10,
+        "knownPrecision": 0.40789473684210525,
+        "recall": 0.7560975609756098,
+        "interceptCost": 1520,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2200,
+        "netHoursAtHalfEffect": 340,
+        "breakEvenEffectiveness": 0.40860215053763443,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1520
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -590
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1270
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2200
+          }
+        ]
       }
     },
     {
@@ -538,6 +580,48 @@
           {
             "effectiveness": 1,
             "netHours": 5620
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 79,
+        "caughtFailures": 32,
+        "falseInterceptions": 47,
+        "interceptedUnknown": 0,
+        "missedFailures": 9,
+        "knownPrecision": 0.4050632911392405,
+        "recall": 0.7804878048780488,
+        "interceptCost": 1580,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2260,
+        "netHoursAtHalfEffect": 340,
+        "breakEvenEffectiveness": 0.4114583333333333,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1580
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -620
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1300
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2260
           }
         ]
       }
@@ -586,6 +670,48 @@
             "netHours": 5600
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 67,
+        "caughtFailures": 26,
+        "falseInterceptions": 41,
+        "interceptedUnknown": 0,
+        "missedFailures": 15,
+        "knownPrecision": 0.3880597014925373,
+        "recall": 0.6341463414634146,
+        "interceptCost": 1340,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1780,
+        "netHoursAtHalfEffect": 220,
+        "breakEvenEffectiveness": 0.42948717948717946,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1340
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -560
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1000
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1780
+          }
+        ]
       }
     },
     {
@@ -630,6 +756,48 @@
           {
             "effectiveness": 1,
             "netHours": 5420
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 70,
+        "caughtFailures": 27,
+        "falseInterceptions": 43,
+        "interceptedUnknown": 0,
+        "missedFailures": 14,
+        "knownPrecision": 0.38571428571428573,
+        "recall": 0.6585365853658537,
+        "interceptCost": 1400,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1840,
+        "netHoursAtHalfEffect": 220,
+        "breakEvenEffectiveness": 0.43209876543209874,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1400
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -590
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1030
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1840
           }
         ]
       }
@@ -678,6 +846,48 @@
             "netHours": 5380
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 87,
+        "caughtFailures": 34,
+        "falseInterceptions": 53,
+        "interceptedUnknown": 0,
+        "missedFailures": 7,
+        "knownPrecision": 0.39080459770114945,
+        "recall": 0.8292682926829268,
+        "interceptCost": 1740,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2340,
+        "netHoursAtHalfEffect": 300,
+        "breakEvenEffectiveness": 0.4264705882352941,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1740
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -720
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 300
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1320
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2340
+          }
+        ]
       }
     },
     {
@@ -722,6 +932,48 @@
           {
             "effectiveness": 1,
             "netHours": 5360
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 100,
+        "caughtFailures": 36,
+        "falseInterceptions": 62,
+        "interceptedUnknown": 2,
+        "missedFailures": 5,
+        "knownPrecision": 0.3673469387755102,
+        "recall": 0.8780487804878049,
+        "interceptCost": 2000,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2320,
+        "netHoursAtHalfEffect": 160,
+        "breakEvenEffectiveness": 0.46296296296296297,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2000
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -920
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 160
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1240
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2320
           }
         ]
       }
@@ -770,6 +1022,48 @@
             "netHours": 5300
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 95,
+        "caughtFailures": 35,
+        "falseInterceptions": 59,
+        "interceptedUnknown": 1,
+        "missedFailures": 6,
+        "knownPrecision": 0.3723404255319149,
+        "recall": 0.8536585365853658,
+        "interceptCost": 1900,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2300,
+        "netHoursAtHalfEffect": 200,
+        "breakEvenEffectiveness": 0.4523809523809524,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1900
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -850
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 200
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1250
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2300
+          }
+        ]
       }
     },
     {
@@ -814,6 +1108,48 @@
           {
             "effectiveness": 1,
             "netHours": 5280
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 78,
+        "caughtFailures": 29,
+        "falseInterceptions": 49,
+        "interceptedUnknown": 0,
+        "missedFailures": 12,
+        "knownPrecision": 0.3717948717948718,
+        "recall": 0.7073170731707317,
+        "interceptCost": 1560,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1920,
+        "netHoursAtHalfEffect": 180,
+        "breakEvenEffectiveness": 0.4482758620689655,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1560
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -690
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 180
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1050
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1920
           }
         ]
       }
@@ -862,6 +1198,48 @@
             "netHours": 5260
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 92,
+        "caughtFailures": 32,
+        "falseInterceptions": 58,
+        "interceptedUnknown": 2,
+        "missedFailures": 9,
+        "knownPrecision": 0.35555555555555557,
+        "recall": 0.7804878048780488,
+        "interceptCost": 1840,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2000,
+        "netHoursAtHalfEffect": 80,
+        "breakEvenEffectiveness": 0.4791666666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1840
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -880
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 80
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1040
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2000
+          }
+        ]
       }
     },
     {
@@ -906,6 +1284,48 @@
           {
             "effectiveness": 1,
             "netHours": 5200
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 86,
+        "caughtFailures": 30,
+        "falseInterceptions": 55,
+        "interceptedUnknown": 1,
+        "missedFailures": 11,
+        "knownPrecision": 0.35294117647058826,
+        "recall": 0.7317073170731707,
+        "interceptCost": 1720,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1880,
+        "netHoursAtHalfEffect": 80,
+        "breakEvenEffectiveness": 0.4777777777777778,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1720
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -820
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 80
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 980
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1880
           }
         ]
       }
@@ -954,6 +1374,48 @@
             "netHours": 5180
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 107,
+        "caughtFailures": 36,
+        "falseInterceptions": 69,
+        "interceptedUnknown": 2,
+        "missedFailures": 5,
+        "knownPrecision": 0.34285714285714286,
+        "recall": 0.8780487804878049,
+        "interceptCost": 2140,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 2180,
+        "netHoursAtHalfEffect": 20,
+        "breakEvenEffectiveness": 0.49537037037037035,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2140
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1060
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1100
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 2180
+          }
+        ]
       }
     },
     {
@@ -998,6 +1460,48 @@
           {
             "effectiveness": 1,
             "netHours": 5080
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 99,
+        "caughtFailures": 32,
+        "falseInterceptions": 65,
+        "interceptedUnknown": 2,
+        "missedFailures": 9,
+        "knownPrecision": 0.32989690721649484,
+        "recall": 0.7804878048780488,
+        "interceptCost": 1980,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1860,
+        "netHoursAtHalfEffect": -60,
+        "breakEvenEffectiveness": 0.515625,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1980
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1020
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -60
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 900
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1860
           }
         ]
       }
@@ -1046,6 +1550,48 @@
             "netHours": 5040
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 59,
+        "caughtFailures": 24,
+        "falseInterceptions": 35,
+        "interceptedUnknown": 0,
+        "missedFailures": 17,
+        "knownPrecision": 0.4067796610169492,
+        "recall": 0.5853658536585366,
+        "interceptCost": 1180,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1700,
+        "netHoursAtHalfEffect": 260,
+        "breakEvenEffectiveness": 0.4097222222222222,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1180
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -460
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 260
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 980
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1700
+          }
+        ]
       }
     },
     {
@@ -1090,6 +1636,48 @@
           {
             "effectiveness": 1,
             "netHours": 4940
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 62,
+        "caughtFailures": 25,
+        "falseInterceptions": 37,
+        "interceptedUnknown": 0,
+        "missedFailures": 16,
+        "knownPrecision": 0.4032258064516129,
+        "recall": 0.6097560975609756,
+        "interceptCost": 1240,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1760,
+        "netHoursAtHalfEffect": 260,
+        "breakEvenEffectiveness": 0.41333333333333333,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1240
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -490
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 260
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1010
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1760
           }
         ]
       }
@@ -1138,6 +1726,48 @@
             "netHours": 4880
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 70,
+        "caughtFailures": 27,
+        "falseInterceptions": 43,
+        "interceptedUnknown": 0,
+        "missedFailures": 14,
+        "knownPrecision": 0.38571428571428573,
+        "recall": 0.6585365853658537,
+        "interceptCost": 1400,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1840,
+        "netHoursAtHalfEffect": 220,
+        "breakEvenEffectiveness": 0.43209876543209874,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1400
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -590
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1030
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1840
+          }
+        ]
       }
     },
     {
@@ -1182,6 +1812,48 @@
           {
             "effectiveness": 1,
             "netHours": 4860
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 85,
+        "caughtFailures": 30,
+        "falseInterceptions": 53,
+        "interceptedUnknown": 2,
+        "missedFailures": 11,
+        "knownPrecision": 0.3614457831325301,
+        "recall": 0.7317073170731707,
+        "interceptCost": 1700,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1900,
+        "netHoursAtHalfEffect": 100,
+        "breakEvenEffectiveness": 0.4722222222222222,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1700
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -800
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 100
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 1000
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1900
           }
         ]
       }
@@ -1230,6 +1902,48 @@
             "netHours": 4800
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 78,
+        "caughtFailures": 28,
+        "falseInterceptions": 49,
+        "interceptedUnknown": 1,
+        "missedFailures": 13,
+        "knownPrecision": 0.36363636363636365,
+        "recall": 0.6829268292682927,
+        "interceptCost": 1560,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1800,
+        "netHoursAtHalfEffect": 120,
+        "breakEvenEffectiveness": 0.4642857142857143,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1560
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -720
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 120
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 960
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1800
+          }
+        ]
       }
     },
     {
@@ -1274,6 +1988,48 @@
           {
             "effectiveness": 1,
             "netHours": 4640
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 92,
+        "caughtFailures": 30,
+        "falseInterceptions": 60,
+        "interceptedUnknown": 2,
+        "missedFailures": 11,
+        "knownPrecision": 0.3333333333333333,
+        "recall": 0.7317073170731707,
+        "interceptCost": 1840,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1760,
+        "netHoursAtHalfEffect": -40,
+        "breakEvenEffectiveness": 0.5111111111111111,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1840
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -940
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -40
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 860
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1760
           }
         ]
       }
@@ -1322,6 +2078,48 @@
             "netHours": 3980
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 113,
+        "caughtFailures": 32,
+        "falseInterceptions": 80,
+        "interceptedUnknown": 1,
+        "missedFailures": 9,
+        "knownPrecision": 0.2857142857142857,
+        "recall": 0.7804878048780488,
+        "interceptCost": 2260,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1580,
+        "netHoursAtHalfEffect": -340,
+        "breakEvenEffectiveness": 0.5885416666666666,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2260
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1300
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 620
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1580
+          }
+        ]
       }
     },
     {
@@ -1366,6 +2164,48 @@
           {
             "effectiveness": 1,
             "netHours": 3760
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 116,
+        "caughtFailures": 33,
+        "falseInterceptions": 82,
+        "interceptedUnknown": 1,
+        "missedFailures": 8,
+        "knownPrecision": 0.28695652173913044,
+        "recall": 0.8048780487804879,
+        "interceptCost": 2320,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1640,
+        "netHoursAtHalfEffect": -340,
+        "breakEvenEffectiveness": 0.5858585858585859,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2320
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1330
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -340
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 650
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1640
           }
         ]
       }
@@ -1414,6 +2254,48 @@
             "netHours": 3680
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 132,
+        "caughtFailures": 36,
+        "falseInterceptions": 94,
+        "interceptedUnknown": 2,
+        "missedFailures": 5,
+        "knownPrecision": 0.27692307692307694,
+        "recall": 0.8780487804878049,
+        "interceptCost": 2640,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1680,
+        "netHoursAtHalfEffect": -480,
+        "breakEvenEffectiveness": 0.6111111111111112,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2640
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1560
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -480
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 600
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1680
+          }
+        ]
       }
     },
     {
@@ -1458,6 +2340,48 @@
           {
             "effectiveness": 1,
             "netHours": 3600
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 122,
+        "caughtFailures": 34,
+        "falseInterceptions": 87,
+        "interceptedUnknown": 1,
+        "missedFailures": 7,
+        "knownPrecision": 0.2809917355371901,
+        "recall": 0.8292682926829268,
+        "interceptCost": 2440,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1640,
+        "netHoursAtHalfEffect": -400,
+        "breakEvenEffectiveness": 0.5980392156862745,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2440
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1420
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -400
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 620
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1640
           }
         ]
       }
@@ -1506,6 +2430,48 @@
             "netHours": 3580
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 137,
+        "caughtFailures": 36,
+        "falseInterceptions": 99,
+        "interceptedUnknown": 2,
+        "missedFailures": 5,
+        "knownPrecision": 0.26666666666666666,
+        "recall": 0.8780487804878049,
+        "interceptCost": 2740,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1580,
+        "netHoursAtHalfEffect": -580,
+        "breakEvenEffectiveness": 0.6342592592592593,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2740
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1660
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -580
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 500
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1580
+          }
+        ]
       }
     },
     {
@@ -1550,6 +2516,48 @@
           {
             "effectiveness": 1,
             "netHours": 3540
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 127,
+        "caughtFailures": 35,
+        "falseInterceptions": 91,
+        "interceptedUnknown": 1,
+        "missedFailures": 6,
+        "knownPrecision": 0.2777777777777778,
+        "recall": 0.8536585365853658,
+        "interceptCost": 2540,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1660,
+        "netHoursAtHalfEffect": -440,
+        "breakEvenEffectiveness": 0.6047619047619047,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -2540
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -1490
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -440
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 610
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1660
           }
         ]
       }
@@ -1598,6 +2606,48 @@
             "netHours": 3020
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 51,
+        "caughtFailures": 20,
+        "falseInterceptions": 31,
+        "interceptedUnknown": 0,
+        "missedFailures": 21,
+        "knownPrecision": 0.39215686274509803,
+        "recall": 0.4878048780487805,
+        "interceptCost": 1020,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 1380,
+        "netHoursAtHalfEffect": 180,
+        "breakEvenEffectiveness": 0.425,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1020
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -420
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 180
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 780
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 1380
+          }
+        ]
       }
     },
     {
@@ -1642,6 +2692,48 @@
           {
             "effectiveness": 1,
             "netHours": 1880
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 167,
+        "caughtFailures": 34,
+        "falseInterceptions": 125,
+        "interceptedUnknown": 8,
+        "missedFailures": 7,
+        "knownPrecision": 0.2138364779874214,
+        "recall": 0.8292682926829268,
+        "interceptCost": 3340,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 740,
+        "netHoursAtHalfEffect": -1300,
+        "breakEvenEffectiveness": 0.8186274509803921,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -3340
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -2320
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -1300
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -280
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 740
           }
         ]
       }
@@ -1690,6 +2782,48 @@
             "netHours": 1040
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 19,
+        "caughtFailures": 10,
+        "falseInterceptions": 9,
+        "interceptedUnknown": 0,
+        "missedFailures": 31,
+        "knownPrecision": 0.5263157894736842,
+        "recall": 0.24390243902439024,
+        "interceptCost": 380,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 820,
+        "netHoursAtHalfEffect": 220,
+        "breakEvenEffectiveness": 0.31666666666666665,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -380
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -80
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 220
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 520
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 820
+          }
+        ]
       }
     },
     {
@@ -1734,6 +2868,48 @@
           {
             "effectiveness": 1,
             "netHours": 920
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 45,
+        "caughtFailures": 15,
+        "falseInterceptions": 28,
+        "interceptedUnknown": 2,
+        "missedFailures": 26,
+        "knownPrecision": 0.3488372093023256,
+        "recall": 0.36585365853658536,
+        "interceptCost": 900,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 900,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": 0.5,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -900
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -450
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 450
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 900
           }
         ]
       }
@@ -1782,6 +2958,48 @@
             "netHours": 780
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 34,
+        "caughtFailures": 12,
+        "falseInterceptions": 20,
+        "interceptedUnknown": 2,
+        "missedFailures": 29,
+        "knownPrecision": 0.375,
+        "recall": 0.2926829268292683,
+        "interceptCost": 680,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 760,
+        "netHoursAtHalfEffect": 40,
+        "breakEvenEffectiveness": 0.4722222222222222,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -680
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -320
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 40
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 400
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 760
+          }
+        ]
       }
     },
     {
@@ -1826,6 +3044,48 @@
           {
             "effectiveness": 1,
             "netHours": 740
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 63,
+        "caughtFailures": 16,
+        "falseInterceptions": 45,
+        "interceptedUnknown": 2,
+        "missedFailures": 25,
+        "knownPrecision": 0.26229508196721313,
+        "recall": 0.3902439024390244,
+        "interceptCost": 1260,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 660,
+        "netHoursAtHalfEffect": -300,
+        "breakEvenEffectiveness": 0.65625,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -1260
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -780
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -300
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 180
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 660
           }
         ]
       }
@@ -1874,6 +3134,48 @@
             "netHours": 300
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 15,
+        "caughtFailures": 6,
+        "falseInterceptions": 9,
+        "interceptedUnknown": 0,
+        "missedFailures": 35,
+        "knownPrecision": 0.4,
+        "recall": 0.14634146341463414,
+        "interceptCost": 300,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 420,
+        "netHoursAtHalfEffect": 60,
+        "breakEvenEffectiveness": 0.4166666666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -300
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -120
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 60
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 240
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 420
+          }
+        ]
       }
     },
     {
@@ -1918,6 +3220,48 @@
           {
             "effectiveness": 1,
             "netHours": 180
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 26,
+        "caughtFailures": 9,
+        "falseInterceptions": 16,
+        "interceptedUnknown": 1,
+        "missedFailures": 32,
+        "knownPrecision": 0.36,
+        "recall": 0.21951219512195122,
+        "interceptCost": 520,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 560,
+        "netHoursAtHalfEffect": 20,
+        "breakEvenEffectiveness": 0.48148148148148145,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -520
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -250
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 290
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 560
           }
         ]
       }
@@ -1966,6 +3310,48 @@
             "netHours": 160
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 5,
+        "caughtFailures": 2,
+        "falseInterceptions": 3,
+        "interceptedUnknown": 0,
+        "missedFailures": 39,
+        "knownPrecision": 0.4,
+        "recall": 0.04878048780487805,
+        "interceptCost": 100,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": 140,
+        "netHoursAtHalfEffect": 20,
+        "breakEvenEffectiveness": 0.4166666666666667,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -100
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -40
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 20
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 80
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 140
+          }
+        ]
       }
     },
     {
@@ -1987,6 +3373,48 @@
         "recall": 0,
         "interceptCost": 0,
         "baselineKnownCrashHours": 11160,
+        "netHoursAtFullEffect": 0,
+        "netHoursAtHalfEffect": 0,
+        "breakEvenEffectiveness": null,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": 0
+          },
+          {
+            "effectiveness": 1,
+            "netHours": 0
+          }
+        ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 0,
+        "caughtFailures": 0,
+        "falseInterceptions": 0,
+        "interceptedUnknown": 0,
+        "missedFailures": 41,
+        "knownPrecision": null,
+        "recall": 0,
+        "interceptCost": 0,
+        "baselineKnownCrashHours": 4920,
         "netHoursAtFullEffect": 0,
         "netHoursAtHalfEffect": 0,
         "breakEvenEffectiveness": null,
@@ -2058,9 +3486,222 @@
             "netHours": -2600
           }
         ]
+      },
+      "validation": {
+        "jobs": 269,
+        "failed": 41,
+        "succeeded": 213,
+        "unknown": 15,
+        "known": 254,
+        "failureRate": 0.16141732283464566,
+        "intercepted": 269,
+        "caughtFailures": 41,
+        "falseInterceptions": 213,
+        "interceptedUnknown": 15,
+        "missedFailures": 0,
+        "knownPrecision": 0.16141732283464566,
+        "recall": 1,
+        "interceptCost": 5380,
+        "baselineKnownCrashHours": 4920,
+        "netHoursAtFullEffect": -460,
+        "netHoursAtHalfEffect": -2920,
+        "breakEvenEffectiveness": 1.0934959349593496,
+        "sensitivity": [
+          {
+            "effectiveness": 0,
+            "netHours": -5380
+          },
+          {
+            "effectiveness": 0.25,
+            "netHours": -4150
+          },
+          {
+            "effectiveness": 0.5,
+            "netHours": -2920
+          },
+          {
+            "effectiveness": 0.75,
+            "netHours": -1690
+          },
+          {
+            "effectiveness": 1,
+            "netHours": -460
+          }
+        ]
       }
     }
   ],
+  "ruleSensitivity": {
+    "scope": "development",
+    "candidateCount": 35,
+    "assumption": "35 项候选在同一开发样本、同一假设有效比例下比较；不代表因果效果或未来最优规则。",
+    "method": "比较所有候选收益直线交点；区间内部最优，端点单列平局并按较少拦截选择。",
+    "segments": [
+      {
+        "from": {
+          "numerator": 0,
+          "denominator": 1,
+          "value": 0
+        },
+        "to": {
+          "numerator": 2,
+          "denominator": 5,
+          "value": 0.4
+        },
+        "ruleIds": [
+          "none"
+        ],
+        "preferredRuleId": "none",
+        "label": "不拦截",
+        "intercepted": 0,
+        "caughtFailures": 0
+      },
+      {
+        "from": {
+          "numerator": 2,
+          "denominator": 5,
+          "value": 0.4
+        },
+        "to": {
+          "numerator": 5,
+          "denominator": 12,
+          "value": 0.4166666666666667
+        },
+        "ruleIds": [
+          "lag-30"
+        ],
+        "preferredRuleId": "lag-30",
+        "label": "同步间隔 ≥ 30 分钟",
+        "intercepted": 168,
+        "caughtFailures": 70
+      },
+      {
+        "from": {
+          "numerator": 5,
+          "denominator": 12,
+          "value": 0.4166666666666667
+        },
+        "to": {
+          "numerator": 4,
+          "denominator": 9,
+          "value": 0.4444444444444444
+        },
+        "ruleIds": [
+          "lag-25"
+        ],
+        "preferredRuleId": "lag-25",
+        "label": "同步间隔 ≥ 25 分钟",
+        "intercepted": 188,
+        "caughtFailures": 78
+      },
+      {
+        "from": {
+          "numerator": 4,
+          "denominator": 9,
+          "value": 0.4444444444444444
+        },
+        "to": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1
+        },
+        "ruleIds": [
+          "lag-20"
+        ],
+        "preferredRuleId": "lag-20",
+        "label": "同步间隔 ≥ 20 分钟",
+        "intercepted": 196,
+        "caughtFailures": 81
+      }
+    ],
+    "boundaries": [
+      {
+        "effectiveness": {
+          "numerator": 0,
+          "denominator": 1,
+          "value": 0
+        },
+        "ruleIds": [
+          "none"
+        ],
+        "preferredRuleId": "none",
+        "label": "不拦截",
+        "intercepted": 0,
+        "caughtFailures": 0
+      },
+      {
+        "effectiveness": {
+          "numerator": 2,
+          "denominator": 5,
+          "value": 0.4
+        },
+        "ruleIds": [
+          "lag-30",
+          "none"
+        ],
+        "preferredRuleId": "none",
+        "label": "不拦截",
+        "intercepted": 0,
+        "caughtFailures": 0
+      },
+      {
+        "effectiveness": {
+          "numerator": 5,
+          "denominator": 12,
+          "value": 0.4166666666666667
+        },
+        "ruleIds": [
+          "lag-25",
+          "lag-30"
+        ],
+        "preferredRuleId": "lag-30",
+        "label": "同步间隔 ≥ 30 分钟",
+        "intercepted": 168,
+        "caughtFailures": 70
+      },
+      {
+        "effectiveness": {
+          "numerator": 4,
+          "denominator": 9,
+          "value": 0.4444444444444444
+        },
+        "ruleIds": [
+          "lag-20",
+          "lag-25"
+        ],
+        "preferredRuleId": "lag-25",
+        "label": "同步间隔 ≥ 25 分钟",
+        "intercepted": 188,
+        "caughtFailures": 78
+      },
+      {
+        "effectiveness": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1
+        },
+        "ruleIds": [
+          "lag-20"
+        ],
+        "preferredRuleId": "lag-20",
+        "label": "同步间隔 ≥ 20 分钟",
+        "intercepted": 196,
+        "caughtFailures": 81
+      }
+    ]
+  },
+  "validationComparison": {
+    "bestCandidateId": "lag-20-or-mem-1",
+    "bestCandidateLabel": "同步 ≥ 20 分钟 或 显存 ≤ 1 MB",
+    "bestNetHoursAtFullEffect": 2340,
+    "selectedNetHoursAtFullEffect": 2200,
+    "caveat": "复核期差异未用于重新选规则；仅凭两个时期排序不同，不能判定差异一定是噪声。"
+  },
+  "thresholdSupport": {
+    "nearestBelow": 18,
+    "nearestAtOrAbove": 22,
+    "caveat": "边界附近缺少观测，不能确定精确临界点，也不能据此断言数据为合成。"
+  },
   "lagGroups": [
     {
       "name": "同步间隔 < 20 分钟",
@@ -2090,6 +3731,23 @@
       "unknown": 12,
       "known": 238,
       "failureRate": 0.15966386554621848,
+      "below": {
+        "jobs": 188,
+        "failed": 5,
+        "succeeded": 175,
+        "unknown": 8,
+        "known": 180,
+        "failureRate": 0.027777777777777776
+      },
+      "above": {
+        "jobs": 62,
+        "failed": 33,
+        "succeeded": 25,
+        "unknown": 4,
+        "known": 58,
+        "failureRate": 0.5689655172413793
+      },
+      "failureRateDifference": 0.5411877394636015,
       "policy": {
         "jobs": 250,
         "failed": 38,
@@ -2141,6 +3799,23 @@
       "unknown": 12,
       "known": 233,
       "failureRate": 0.15021459227467812,
+      "below": {
+        "jobs": 179,
+        "failed": 4,
+        "succeeded": 167,
+        "unknown": 8,
+        "known": 171,
+        "failureRate": 0.023391812865497075
+      },
+      "above": {
+        "jobs": 66,
+        "failed": 31,
+        "succeeded": 31,
+        "unknown": 4,
+        "known": 62,
+        "failureRate": 0.5
+      },
+      "failureRateDifference": 0.4766081871345029,
       "policy": {
         "jobs": 245,
         "failed": 35,
@@ -2192,6 +3867,23 @@
       "unknown": 16,
       "known": 217,
       "failureRate": 0.1152073732718894,
+      "below": {
+        "jobs": 164,
+        "failed": 12,
+        "succeeded": 137,
+        "unknown": 15,
+        "known": 149,
+        "failureRate": 0.08053691275167785
+      },
+      "above": {
+        "jobs": 69,
+        "failed": 13,
+        "succeeded": 55,
+        "unknown": 1,
+        "known": 68,
+        "failureRate": 0.19117647058823528
+      },
+      "failureRateDifference": 0.11063955783655743,
       "policy": {
         "jobs": 233,
         "failed": 25,
@@ -2243,6 +3935,23 @@
       "unknown": 11,
       "known": 218,
       "failureRate": 0.1651376146788991,
+      "below": {
+        "jobs": 154,
+        "failed": 1,
+        "succeeded": 147,
+        "unknown": 6,
+        "known": 148,
+        "failureRate": 0.006756756756756757
+      },
+      "above": {
+        "jobs": 75,
+        "failed": 35,
+        "succeeded": 35,
+        "unknown": 5,
+        "known": 70,
+        "failureRate": 0.5
+      },
+      "failureRateDifference": 0.49324324324324326,
       "policy": {
         "jobs": 229,
         "failed": 36,
@@ -2296,6 +4005,23 @@
       "unknown": 4,
       "known": 105,
       "failureRate": 0.18095238095238095,
+      "below": {
+        "jobs": 77,
+        "failed": 6,
+        "succeeded": 67,
+        "unknown": 4,
+        "known": 73,
+        "failureRate": 0.0821917808219178
+      },
+      "above": {
+        "jobs": 32,
+        "failed": 13,
+        "succeeded": 19,
+        "unknown": 0,
+        "known": 32,
+        "failureRate": 0.40625
+      },
+      "failureRateDifference": 0.3240582191780822,
       "policy": {
         "jobs": 109,
         "failed": 19,
@@ -2347,6 +4073,23 @@
       "unknown": 6,
       "known": 112,
       "failureRate": 0.16071428571428573,
+      "below": {
+        "jobs": 87,
+        "failed": 2,
+        "succeeded": 81,
+        "unknown": 4,
+        "known": 83,
+        "failureRate": 0.024096385542168676
+      },
+      "above": {
+        "jobs": 31,
+        "failed": 16,
+        "succeeded": 13,
+        "unknown": 2,
+        "known": 29,
+        "failureRate": 0.5517241379310345
+      },
+      "failureRateDifference": 0.5276277523888658,
       "policy": {
         "jobs": 118,
         "failed": 18,
@@ -2398,6 +4141,23 @@
       "unknown": 9,
       "known": 94,
       "failureRate": 0.14893617021276595,
+      "below": {
+        "jobs": 73,
+        "failed": 3,
+        "succeeded": 64,
+        "unknown": 6,
+        "known": 67,
+        "failureRate": 0.04477611940298507
+      },
+      "above": {
+        "jobs": 30,
+        "failed": 11,
+        "succeeded": 16,
+        "unknown": 3,
+        "known": 27,
+        "failureRate": 0.4074074074074074
+      },
+      "failureRateDifference": 0.3626312880044223,
       "policy": {
         "jobs": 103,
         "failed": 14,
@@ -2449,6 +4209,23 @@
       "unknown": 11,
       "known": 102,
       "failureRate": 0.09803921568627451,
+      "below": {
+        "jobs": 81,
+        "failed": 1,
+        "succeeded": 72,
+        "unknown": 8,
+        "known": 73,
+        "failureRate": 0.0136986301369863
+      },
+      "above": {
+        "jobs": 32,
+        "failed": 9,
+        "succeeded": 20,
+        "unknown": 3,
+        "known": 29,
+        "failureRate": 0.3103448275862069
+      },
+      "failureRateDifference": 0.2966461974492206,
       "policy": {
         "jobs": 113,
         "failed": 10,
@@ -2500,6 +4277,23 @@
       "unknown": 7,
       "known": 120,
       "failureRate": 0.175,
+      "below": {
+        "jobs": 80,
+        "failed": 2,
+        "succeeded": 75,
+        "unknown": 3,
+        "known": 77,
+        "failureRate": 0.025974025974025976
+      },
+      "above": {
+        "jobs": 47,
+        "failed": 19,
+        "succeeded": 24,
+        "unknown": 4,
+        "known": 43,
+        "failureRate": 0.4418604651162791
+      },
+      "failureRateDifference": 0.4158864391422531,
       "policy": {
         "jobs": 127,
         "failed": 21,
@@ -2551,6 +4345,23 @@
       "unknown": 5,
       "known": 121,
       "failureRate": 0.1487603305785124,
+      "below": {
+        "jobs": 87,
+        "failed": 2,
+        "succeeded": 81,
+        "unknown": 4,
+        "known": 83,
+        "failureRate": 0.024096385542168676
+      },
+      "above": {
+        "jobs": 39,
+        "failed": 16,
+        "succeeded": 22,
+        "unknown": 1,
+        "known": 38,
+        "failureRate": 0.42105263157894735
+      },
+      "failureRateDifference": 0.39695624603677865,
       "policy": {
         "jobs": 126,
         "failed": 18,
@@ -2602,6 +4413,23 @@
       "unknown": 6,
       "known": 129,
       "failureRate": 0.17054263565891473,
+      "below": {
+        "jobs": 94,
+        "failed": 4,
+        "succeeded": 85,
+        "unknown": 5,
+        "known": 89,
+        "failureRate": 0.0449438202247191
+      },
+      "above": {
+        "jobs": 41,
+        "failed": 18,
+        "succeeded": 22,
+        "unknown": 1,
+        "known": 40,
+        "failureRate": 0.45
+      },
+      "failureRateDifference": 0.4050561797752809,
       "policy": {
         "jobs": 135,
         "failed": 22,
@@ -2653,6 +4481,23 @@
       "unknown": 3,
       "known": 123,
       "failureRate": 0.0975609756097561,
+      "below": {
+        "jobs": 106,
+        "failed": 2,
+        "succeeded": 101,
+        "unknown": 3,
+        "known": 103,
+        "failureRate": 0.019417475728155338
+      },
+      "above": {
+        "jobs": 20,
+        "failed": 10,
+        "succeeded": 10,
+        "unknown": 0,
+        "known": 20,
+        "failureRate": 0.5
+      },
+      "failureRateDifference": 0.48058252427184467,
       "policy": {
         "jobs": 126,
         "failed": 12,
@@ -2706,6 +4551,23 @@
       "unknown": 8,
       "known": 138,
       "failureRate": 0.15942028985507245,
+      "below": {
+        "jobs": 113,
+        "failed": 5,
+        "succeeded": 102,
+        "unknown": 6,
+        "known": 107,
+        "failureRate": 0.04672897196261682
+      },
+      "above": {
+        "jobs": 33,
+        "failed": 17,
+        "succeeded": 14,
+        "unknown": 2,
+        "known": 31,
+        "failureRate": 0.5483870967741935
+      },
+      "failureRateDifference": 0.5016581248115767,
       "policy": {
         "jobs": 146,
         "failed": 22,
@@ -2757,6 +4619,23 @@
       "unknown": 6,
       "known": 126,
       "failureRate": 0.15079365079365079,
+      "below": {
+        "jobs": 93,
+        "failed": 4,
+        "succeeded": 86,
+        "unknown": 3,
+        "known": 90,
+        "failureRate": 0.044444444444444446
+      },
+      "above": {
+        "jobs": 39,
+        "failed": 15,
+        "succeeded": 21,
+        "unknown": 3,
+        "known": 36,
+        "failureRate": 0.4166666666666667
+      },
+      "failureRateDifference": 0.37222222222222223,
       "policy": {
         "jobs": 132,
         "failed": 19,
@@ -2808,6 +4687,23 @@
       "unknown": 5,
       "known": 140,
       "failureRate": 0.12857142857142856,
+      "below": {
+        "jobs": 101,
+        "failed": 1,
+        "succeeded": 97,
+        "unknown": 3,
+        "known": 98,
+        "failureRate": 0.01020408163265306
+      },
+      "above": {
+        "jobs": 44,
+        "failed": 17,
+        "succeeded": 25,
+        "unknown": 2,
+        "known": 42,
+        "failureRate": 0.40476190476190477
+      },
+      "failureRateDifference": 0.3945578231292517,
       "policy": {
         "jobs": 145,
         "failed": 18,
@@ -2859,6 +4755,23 @@
       "unknown": 8,
       "known": 126,
       "failureRate": 0.14285714285714285,
+      "below": {
+        "jobs": 94,
+        "failed": 2,
+        "succeeded": 87,
+        "unknown": 5,
+        "known": 89,
+        "failureRate": 0.02247191011235955
+      },
+      "above": {
+        "jobs": 40,
+        "failed": 16,
+        "succeeded": 21,
+        "unknown": 3,
+        "known": 37,
+        "failureRate": 0.43243243243243246
+      },
+      "failureRateDifference": 0.4099605223200729,
       "policy": {
         "jobs": 134,
         "failed": 18,
@@ -2910,6 +4823,23 @@
       "unknown": 9,
       "known": 122,
       "failureRate": 0.13114754098360656,
+      "below": {
+        "jobs": 91,
+        "failed": 0,
+        "succeeded": 86,
+        "unknown": 5,
+        "known": 86,
+        "failureRate": 0
+      },
+      "above": {
+        "jobs": 40,
+        "failed": 16,
+        "succeeded": 20,
+        "unknown": 4,
+        "known": 36,
+        "failureRate": 0.4444444444444444
+      },
+      "failureRateDifference": 0.4444444444444444,
       "policy": {
         "jobs": 131,
         "failed": 16,
@@ -2961,6 +4891,23 @@
       "unknown": 6,
       "known": 126,
       "failureRate": 0.16666666666666666,
+      "below": {
+        "jobs": 94,
+        "failed": 5,
+        "succeeded": 83,
+        "unknown": 6,
+        "known": 88,
+        "failureRate": 0.056818181818181816
+      },
+      "above": {
+        "jobs": 38,
+        "failed": 16,
+        "succeeded": 22,
+        "unknown": 0,
+        "known": 38,
+        "failureRate": 0.42105263157894735
+      },
+      "failureRateDifference": 0.3642344497607655,
       "policy": {
         "jobs": 132,
         "failed": 21,
@@ -3012,6 +4959,23 @@
       "unknown": 9,
       "known": 128,
       "failureRate": 0.15625,
+      "below": {
+        "jobs": 99,
+        "failed": 5,
+        "succeeded": 85,
+        "unknown": 9,
+        "known": 90,
+        "failureRate": 0.05555555555555555
+      },
+      "above": {
+        "jobs": 38,
+        "failed": 15,
+        "succeeded": 23,
+        "unknown": 0,
+        "known": 38,
+        "failureRate": 0.39473684210526316
+      },
+      "failureRateDifference": 0.3391812865497076,
       "policy": {
         "jobs": 137,
         "failed": 20,
@@ -3056,10 +5020,35 @@
       }
     }
   ],
+  "stratification": {
+    "groups": [
+      {
+        "dimension": "团队",
+        "total": 4,
+        "comparable": 4,
+        "positive": 4
+      },
+      {
+        "dimension": "场景",
+        "total": 8,
+        "comparable": 8,
+        "positive": 8
+      },
+      {
+        "dimension": "北京时间日期",
+        "total": 7,
+        "comparable": 7,
+        "positive": 7
+      }
+    ],
+    "caveat": "分别按单一维度分层后关联同向，不等于排除联合混杂、未观测混杂或证明因果。"
+  },
   "assumptions": [
     "拦截后成功消除原本失败的比例未知，以0%、25%、50%、75%、100%做情景测算。",
     "未知结果不计避免失败收益，但若被拦截仍计20工时成本。",
     "同步间隔只表示缓存最后完成同步到提交的间隔，不证明资产已过期，也不证明同步造成崩溃。",
-    "无资产版本、失败原因、修复后结果、实际返工时长或全局任务总量；不宣称已实现节省或证明线上失败上升。"
+    "无资产版本、失败原因、修复后结果、实际返工时长或全局任务总量；不宣称已实现节省或证明线上失败上升。",
+    "提醒不等于完成干预；暂按题目每次20工时记账，真实响应比例、核查成本和有效比例须另行测量。",
+    "无负同步间隔不能证明字段在提交时已定格，上线前须确认事件快照语义。"
   ]
 }

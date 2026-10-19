@@ -154,3 +154,93 @@ test("render HTTP report, preview and complete CSV export use the same policy", 
     app.locals.store.close();
   }
 });
+
+test("continuous effectiveness review finds the 30/25/20-minute switches and exact boundary ties", () => {
+  const { metrics: m } = loadRender(root);
+  const envelope = m.ruleSensitivity;
+  assert.equal(envelope.candidateCount, 35);
+  assert.deepEqual(
+    envelope.segments.map((s) => s.preferredRuleId),
+    ["none", "lag-30", "lag-25", "lag-20"],
+  );
+  assert.deepEqual(
+    envelope.boundaries.map((b) => [
+      b.effectiveness.numerator,
+      b.effectiveness.denominator,
+    ]),
+    [
+      [0, 1],
+      [2, 5],
+      [5, 12],
+      [4, 9],
+      [1, 1],
+    ],
+  );
+  assert.deepEqual(
+    envelope.boundaries.map((b) => b.preferredRuleId),
+    ["none", "none", "lag-30", "lag-25", "lag-20"],
+  );
+  assert.deepEqual(envelope.boundaries[3].ruleIds, ["lag-20", "lag-25"]);
+  const ranked = (effect) =>
+    [...m.candidates].sort(
+      (a, b) =>
+        (b.train.caughtFailures - a.train.caughtFailures) * 120 * effect -
+        (b.train.interceptCost - a.train.interceptCost),
+    )[0];
+  const at403 = ranked(0.403);
+  assert.equal(at403.id, "lag-30");
+  assert.ok(
+    Math.abs(
+      at403.train.caughtFailures * 120 * 0.403 -
+        at403.train.interceptCost -
+        25.2,
+    ) < 1e-9,
+  );
+  assert.equal(ranked(0.43).id, "lag-25");
+  assert.equal(ranked(0.5).id, "lag-20");
+});
+
+test("team evidence pays for unknown outcomes and reports association without a causal claim", () => {
+  const { metrics: m } = loadRender(root);
+  const overseas = m.byTeam.find((team) => team.name === "海外定制组");
+  assert.equal(overseas.below.known, 149);
+  assert.equal(overseas.below.failed, 12);
+  assert.equal(overseas.above.known, 68);
+  assert.equal(overseas.above.failed, 13);
+  assert.equal(overseas.policy.intercepted, 69);
+  assert.equal(overseas.policy.interceptedUnknown, 1);
+  assert.equal(overseas.policy.netHoursAtHalfEffect, -600);
+  assert.ok(Math.abs(overseas.policy.breakEvenEffectiveness - 23 / 26) < 1e-12);
+  const others = m.byTeam.filter((team) => team !== overseas);
+  assert.equal(
+    others.reduce((sum, team) => sum + team.policy.intercepted, 0),
+    203,
+  );
+  assert.equal(
+    others.reduce((sum, team) => sum + team.policy.caughtFailures, 0),
+    99,
+  );
+  assert.equal(
+    others.reduce((sum, team) => sum + team.policy.netHoursAtHalfEffect, 0),
+    1880,
+  );
+  assert.deepEqual(
+    m.stratification.groups.map((g) => [g.total, g.comparable, g.positive]),
+    [
+      [4, 4, 4],
+      [8, 8, 8],
+      [7, 7, 7],
+    ],
+  );
+  assert.equal(
+    m.byDay.find((day) => day.name === "2026-09-05").below.failureRate,
+    0,
+  );
+  assert.equal(m.validationComparison.bestCandidateId, "lag-20-or-mem-1");
+  assert.equal(m.validationComparison.bestNetHoursAtFullEffect, 2340);
+  assert.equal(m.validationComparison.selectedNetHoursAtFullEffect, 2200);
+  assert.deepEqual(
+    [m.thresholdSupport.nearestBelow, m.thresholdSupport.nearestAtOrAbove],
+    [18, 22],
+  );
+});

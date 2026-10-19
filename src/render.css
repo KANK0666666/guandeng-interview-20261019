@@ -536,6 +536,10 @@ select:focus-visible {
   color: #9ca59f;
   margin-top: 5px;
 }
+.render-app td.rc-negative {
+  color: #a85e49;
+  font-weight: 600;
+}
 .rc-job {
   background: none;
   padding: 0;

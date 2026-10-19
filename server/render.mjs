@@ -183,6 +183,97 @@ export function candidates() {
   return result;
 }
 
+// Candidate benefits are straight lines in effectiveness. Compare every
+// intersection, not just a few sampled percentages. Fractions keep ties exact.
+export function policyEnvelope(options, config) {
+  const fraction = (numerator, denominator = 1) => {
+    if (denominator < 0) [numerator, denominator] = [-numerator, -denominator];
+    let a = Math.abs(numerator),
+      b = denominator;
+    while (b) [a, b] = [b, a % b];
+    numerator /= a;
+    denominator /= a;
+    return { numerator, denominator, value: numerator / denominator };
+  };
+  const lines = options.map((option) => ({
+    id: option.id,
+    label: option.label,
+    intercepted: option.train.intercepted,
+    caughtFailures: option.train.caughtFailures,
+    slope: option.train.caughtFailures * config.crashHours,
+    cost: option.train.interceptCost,
+  }));
+  if (
+    lines.some(
+      (line) =>
+        !Number.isSafeInteger(line.slope) || !Number.isSafeInteger(line.cost),
+    )
+  )
+    throw new Error("有效比例区间的精确核算需要整数工时成本。");
+  const bestAt = ({ numerator, denominator }) => {
+    const values = lines.map(
+      (line) => line.slope * numerator - line.cost * denominator,
+    );
+    const best = Math.max(...values);
+    const tied = lines
+      .filter((_, i) => values[i] === best)
+      .sort(
+        (a, b) => a.intercepted - b.intercepted || a.id.localeCompare(b.id),
+      );
+    return {
+      ruleIds: tied.map((line) => line.id).sort(),
+      preferredRuleId: tied[0].id,
+      label: tied[0].label,
+      intercepted: tied[0].intercepted,
+      caughtFailures: tied[0].caughtFailures,
+    };
+  };
+  const cuts = new Map([
+    ["0/1", fraction(0)],
+    ["1/1", fraction(1)],
+  ]);
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const a = lines[i],
+        b = lines[j];
+      if (a.slope === b.slope) continue;
+      const cut = fraction(a.cost - b.cost, a.slope - b.slope);
+      if (cut.value > 0 && cut.value < 1)
+        cuts.set(`${cut.numerator}/${cut.denominator}`, cut);
+    }
+  }
+  const ordered = [...cuts.values()].sort((a, b) => a.value - b.value);
+  const segments = [];
+  for (let i = 0; i < ordered.length - 1; i++) {
+    const from = ordered[i],
+      to = ordered[i + 1];
+    const middle = fraction(
+      from.numerator * to.denominator + to.numerator * from.denominator,
+      2 * from.denominator * to.denominator,
+    );
+    const best = bestAt(middle),
+      previous = segments.at(-1);
+    if (
+      previous &&
+      JSON.stringify(previous.ruleIds) === JSON.stringify(best.ruleIds)
+    )
+      previous.to = to;
+    else segments.push({ from, to, ...best });
+  }
+  return {
+    scope: "development",
+    candidateCount: lines.length,
+    assumption:
+      "35 项候选在同一开发样本、同一假设有效比例下比较；不代表因果效果或未来最优规则。",
+    method:
+      "比较所有候选收益直线交点；区间内部最优，端点单列平局并按较少拦截选择。",
+    segments,
+    boundaries: [segments[0].from, ...segments.map((s) => s.to)].map(
+      (effectiveness) => ({ effectiveness, ...bestAt(effectiveness) }),
+    ),
+  };
+}
+
 export function analyzeRender(bytes, config) {
   const clean = cleanRender(bytes),
     rows = clean.rows;
@@ -201,6 +292,7 @@ export function analyzeRender(bytes, config) {
       id: c.id,
       label: c.label,
       train: policyMetrics(train, c.test, config),
+      validation: policyMetrics(validation, c.test, config),
     }))
     .sort(
       (a, b) =>
@@ -215,18 +307,33 @@ export function analyzeRender(bytes, config) {
       "配置中的规则不再是开发期候选规则的最高收益项，请审查后更新。",
     );
   const slices = (key) =>
-    [...new Set(rows.map((r) => r[key]))].sort().map((name) => ({
-      name,
-      ...count(rows.filter((r) => r[key] === name)),
-      policy: policyMetrics(
-        rows.filter((r) => r[key] === name),
-        selected.test,
-        config,
-      ),
-    }));
+    [...new Set(rows.map((r) => r[key]))].sort().map((name) => {
+      const group = rows.filter((r) => r[key] === name);
+      const below = count(group.filter((r) => !selected.test(r)));
+      const above = count(group.filter(selected.test));
+      return {
+        name,
+        ...count(group),
+        below,
+        above,
+        failureRateDifference:
+          below.failureRate !== null && above.failureRate !== null
+            ? above.failureRate - below.failureRate
+            : null,
+        policy: policyMetrics(group, selected.test, config),
+      };
+    });
+  const byTeam = slices("team_id"),
+    byScene = slices("scene_type"),
+    byDay = slices("localDay");
+  const validationBest = [...options].sort(
+    (a, b) =>
+      b.validation.netHoursAtFullEffect - a.validation.netHoursAtFullEffect ||
+      a.validation.intercepted - b.validation.intercepted,
+  )[0];
   const outcomes = count(rows);
   const metrics = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       path: config.source,
       sha256: clean.sha256,
@@ -265,7 +372,7 @@ export function analyzeRender(bytes, config) {
       lagMinutes: config.selectedLagMinutes,
       usesOutcome: false,
       action:
-        "先核对资产版本并同步，完成后重新预检；每个唯一 job_id 最多计一次拦截成本。",
+        "先核对资产版本，必要时同步后重新预检；每个唯一 job_id 在模型中最多计一次拦截成本。",
     },
     split: {
       trainThrough: config.trainThrough,
@@ -286,6 +393,29 @@ export function analyzeRender(bytes, config) {
       };
     }),
     candidates: options,
+    ruleSensitivity: policyEnvelope(options, config),
+    validationComparison: {
+      bestCandidateId: validationBest.id,
+      bestCandidateLabel: validationBest.label,
+      bestNetHoursAtFullEffect: validationBest.validation.netHoursAtFullEffect,
+      selectedNetHoursAtFullEffect: policyMetrics(
+        validation,
+        selected.test,
+        config,
+      ).netHoursAtFullEffect,
+      caveat:
+        "复核期差异未用于重新选规则；仅凭两个时期排序不同，不能判定差异一定是噪声。",
+    },
+    thresholdSupport: {
+      nearestBelow: Math.max(
+        ...rows.filter((r) => !selected.test(r)).map((r) => r.lagMinutes),
+      ),
+      nearestAtOrAbove: Math.min(
+        ...rows.filter(selected.test).map((r) => r.lagMinutes),
+      ),
+      caveat:
+        "边界附近缺少观测，不能确定精确临界点，也不能据此断言数据为合成。",
+    },
     lagGroups: [
       {
         name: `同步间隔 < ${config.selectedLagMinutes} 分钟`,
@@ -296,14 +426,31 @@ export function analyzeRender(bytes, config) {
         ...count(rows.filter((r) => r.lagMinutes >= config.selectedLagMinutes)),
       },
     ],
-    byTeam: slices("team_id"),
-    byScene: slices("scene_type"),
-    byDay: slices("localDay"),
+    byTeam,
+    byScene,
+    byDay,
+    stratification: {
+      groups: [
+        ["团队", byTeam],
+        ["场景", byScene],
+        ["北京时间日期", byDay],
+      ].map(([dimension, groups]) => ({
+        dimension,
+        total: groups.length,
+        comparable: groups.filter((g) => g.failureRateDifference !== null)
+          .length,
+        positive: groups.filter((g) => g.failureRateDifference > 0).length,
+      })),
+      caveat:
+        "分别按单一维度分层后关联同向，不等于排除联合混杂、未观测混杂或证明因果。",
+    },
     assumptions: [
       "拦截后成功消除原本失败的比例未知，以0%、25%、50%、75%、100%做情景测算。",
       "未知结果不计避免失败收益，但若被拦截仍计20工时成本。",
       "同步间隔只表示缓存最后完成同步到提交的间隔，不证明资产已过期，也不证明同步造成崩溃。",
       "无资产版本、失败原因、修复后结果、实际返工时长或全局任务总量；不宣称已实现节省或证明线上失败上升。",
+      "提醒不等于完成干预；暂按题目每次20工时记账，真实响应比例、核查成本和有效比例须另行测量。",
+      "无负同步间隔不能证明字段在提交时已定格，上线前须确认事件快照语义。",
     ],
   };
   const auditedRows = rows.map((r) => ({
