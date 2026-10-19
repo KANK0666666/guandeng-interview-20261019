@@ -142,11 +142,17 @@ export function FilterBar({
   onChange: (f: Filters) => void;
   children?: ReactNode;
 }) {
+  const filterField = filters.filter || mapping.group;
   const values = useResource<{ values: string[]; truncated: boolean }>(
-    mapping.group
-      ? `/api/datasets/${dataset.id}/values?field=${encodeURIComponent(mapping.group)}`
+    filterField
+      ? `/api/datasets/${dataset.id}/values?field=${encodeURIComponent(filterField)}`
       : null,
   );
+  const choices = values.data?.values || [];
+  const visibleChoices =
+    filters.filter && !choices.includes(filters.value)
+      ? [filters.value, ...choices]
+      : choices;
   const active = filters.q || filters.filter || filters.from || filters.to;
   return (
     <div className="filter-bar">
@@ -159,21 +165,21 @@ export function FilterBar({
           onChange={(e) => onChange({ ...filters, q: e.target.value })}
         />
       </label>
-      {mapping.group && (
+      {filterField && (
         <label className="compact-select">
-          <span className="sr-only">筛选{mapping.group}</span>
+          <span className="sr-only">筛选{filterField}</span>
           <select
             value={filters.filter ? JSON.stringify(filters.value) : ""}
             onChange={(e) =>
               onChange({
                 ...filters,
-                filter: e.target.value === "" ? "" : mapping.group,
+                filter: e.target.value === "" ? "" : filterField,
                 value: e.target.value === "" ? "" : JSON.parse(e.target.value),
               })
             }
           >
-            <option value="">全部{mapping.group}</option>
-            {values.data?.values.map((v) => (
+            <option value="">全部{filterField}</option>
+            {visibleChoices.map((v) => (
               <option key={v} value={JSON.stringify(v)}>
                 {v || "（空值）"}
               </option>
