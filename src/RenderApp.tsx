@@ -13,6 +13,13 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import ServicePolicyPanel from "./ServicePolicyPanel";
+import {
+  normalizeServicePolicy,
+  sortHistoricalQueue,
+  teamWeight,
+  type ServicePolicy,
+} from "./service-policy.mjs";
 import "./render.css";
 
 type Counts = {
@@ -133,7 +140,16 @@ const outcomeName = { success: "成功", failure: "失败", unknown: "未回传"
 export default function RenderApp() {
   const [report, setReport] = useState<Report | null>(null),
     [error, setError] = useState("");
-  const [tab, setTab] = useState<"queue" | "evidence">("queue");
+  const [tab, setTab] = useState<"queue" | "evidence" | "service">("queue");
+  const [servicePolicy, setServicePolicy] = useState<ServicePolicy>(() => {
+    try {
+      return normalizeServicePolicy(
+        JSON.parse(localStorage.getItem("render-service-policy-v1") || "null"),
+      );
+    } catch {
+      return normalizeServicePolicy(null);
+    }
+  });
   const [search, setSearch] = useState(""),
     [team, setTeam] = useState(""),
     [status, setStatus] = useState(""),
@@ -168,17 +184,30 @@ export default function RenderApp() {
   }, []);
   useEffect(() => {
     setPage(1);
-  }, [search, team, status]);
+  }, [search, team, status, servicePolicy]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "render-service-policy-v1",
+        JSON.stringify(servicePolicy),
+      );
+    } catch {
+      // The current session remains usable when browser storage is unavailable.
+    }
+  }, [servicePolicy]);
   const queue = useMemo(
     () =>
-      report?.rows.filter(
-        (r) =>
-          r.intercept &&
-          (!team || r.team_id === team) &&
-          (!status || r.outcome === status) &&
-          (!search || `${r.job_id} ${r.scene_type}`.includes(search)),
-      ) || [],
-    [report, search, team, status],
+      sortHistoricalQueue(
+        report?.rows.filter(
+          (r) =>
+            r.intercept &&
+            (!team || r.team_id === team) &&
+            (!status || r.outcome === status) &&
+            (!search || `${r.job_id} ${r.scene_type}`.includes(search)),
+        ) || [],
+        servicePolicy,
+      ),
+    [report, search, team, status, servicePolicy],
   );
   function mark(id: string) {
     const next = reviewed.includes(id)
@@ -270,6 +299,13 @@ export default function RenderApp() {
           <FileCheck2 size={18} />
           回放证据
         </button>
+        <button
+          className={tab === "service" ? "active" : ""}
+          onClick={() => setTab("service")}
+        >
+          <SlidersHorizontal size={18} />
+          业务保障与权重
+        </button>
         <div className="rc-sidebar-note">
           <Clock3 size={23} />
           <strong>先检查，再提交</strong>
@@ -286,11 +322,18 @@ export default function RenderApp() {
       <main className="rc-main">
         <header className="rc-top">
           <span>
-            工作空间 <b>/</b> {tab === "queue" ? "预检工作台" : "回放证据"}
+            工作空间 <b>/</b>{" "}
+            {tab === "queue"
+              ? "预检工作台"
+              : tab === "service"
+                ? "业务保障与权重"
+                : "回放证据"}
           </span>
           <span className="rc-source">
             <Database size={13} />
-            题目发放数据 · 09.01—09.07
+            {tab === "service"
+              ? "业务假设与服务规则演示"
+              : "题目发放数据 · 09.01—09.07"}
           </span>
         </header>
         <div className="rc-content">
@@ -300,13 +343,17 @@ export default function RenderApp() {
               <h1>
                 {tab === "queue"
                   ? "把返工留在提交之前"
-                  : "每一个判断，都能回到数据"}
+                  : tab === "service"
+                    ? "重要项目，提前有人跟进"
+                    : "每一个判断，都能回到数据"}
                 <span>.</span>
               </h1>
               <p>
                 {tab === "queue"
                   ? "优先核查资产同步间隔较长的任务，给设计师一条明确的处理路径。"
-                  : "按唯一任务核算收益与成本，保留误拦、未知结果和适用边界。"}
+                  : tab === "service"
+                    ? "按业务重要性安排关注顺序，用独立的无结果时限保障 KA 与定制项目。"
+                    : "按唯一任务核算收益与成本，保留误拦、未知结果和适用边界。"}
               </p>
             </div>
             <a className="rc-primary" href="/api/render/queue.csv">
@@ -314,40 +361,51 @@ export default function RenderApp() {
               导出全部预检清单
             </a>
           </div>
-          <div className="rc-notice">
-            <ShieldCheck size={17} />
-            <span>
-              <strong>
-                当前候选规则：同步间隔 ≥ {m.selectedRule.lagMinutes} 分钟
-              </strong>
-              　先提示设计师核对版本与同步状态；不直接判定故障原因。
-            </span>
-            <span className="rc-pill">历史回放</span>
-          </div>
-          <section className="rc-kpis">
-            <Kpi
-              label="纳入分析的唯一任务"
-              value={n(m.source.uniqueJobs)}
-              detail={`原始 ${m.source.rawRows} 行 · 合并 ${m.source.duplicatesRemoved} 行重复`}
+          {tab !== "service" && (
+            <>
+              <div className="rc-notice">
+                <ShieldCheck size={17} />
+                <span>
+                  <strong>
+                    当前候选规则：同步间隔 ≥ {m.selectedRule.lagMinutes} 分钟
+                  </strong>
+                  　先提示设计师核对版本与同步状态；不直接判定故障原因。
+                </span>
+                <span className="rc-pill">历史回放</span>
+              </div>
+              <section className="rc-kpis">
+                <Kpi
+                  label="纳入分析的唯一任务"
+                  value={n(m.source.uniqueJobs)}
+                  detail={`原始 ${m.source.rawRows} 行 · 合并 ${m.source.duplicatesRemoved} 行重复`}
+                />
+                <Kpi
+                  label="已知结果的失败率"
+                  value={pct(m.outcomes.failureRate)}
+                  detail={`${m.outcomes.failed} / ${m.outcomes.known} · 另有 ${m.outcomes.unknown} 个未回传`}
+                />
+                <Kpi
+                  label="规则命中的历史失败"
+                  value={`${p.caughtFailures} / ${m.outcomes.failed}`}
+                  detail={`覆盖 ${pct(p.recall)} 的已知失败`}
+                />
+                <Kpi
+                  label="50% 有效情景净节省"
+                  value={`${n(p.netHoursAtHalfEffect)} 工时`}
+                  detail="扣除所有拦截成本 · 尚非实测收益"
+                  accent
+                />
+              </section>
+            </>
+          )}
+          {tab === "service" ? (
+            <ServicePolicyPanel
+              policy={servicePolicy}
+              onChange={setServicePolicy}
+              teams={m.byTeam}
+              onShowQueue={() => setTab("queue")}
             />
-            <Kpi
-              label="已知结果的失败率"
-              value={pct(m.outcomes.failureRate)}
-              detail={`${m.outcomes.failed} / ${m.outcomes.known} · 另有 ${m.outcomes.unknown} 个未回传`}
-            />
-            <Kpi
-              label="规则命中的历史失败"
-              value={`${p.caughtFailures} / ${m.outcomes.failed}`}
-              detail={`覆盖 ${pct(p.recall)} 的已知失败`}
-            />
-            <Kpi
-              label="50% 有效情景净节省"
-              value={`${n(p.netHoursAtHalfEffect)} 工时`}
-              detail="扣除所有拦截成本 · 尚非实测收益"
-              accent
-            />
-          </section>
-          {tab === "queue" ? (
+          ) : tab === "queue" ? (
             <>
               <div className="rc-two-col">
                 <section className="rc-panel rc-checker">
@@ -445,13 +503,18 @@ export default function RenderApp() {
                 <div className="rc-panel-heading">
                   <div>
                     <h2>
-                      待核查任务 <span>{queue.length}</span>
+                      历史核查清单 <span>{queue.length}</span>
                     </h2>
                     <p>
                       历史回放中触发规则的任务；“已核查”仅为本机标记，不表示资产已修复。
                     </p>
                   </div>
-                  <span className="rc-small-label">按提交时间排序</span>
+                  <button
+                    className="rc-policy-link"
+                    onClick={() => setTab("service")}
+                  >
+                    按业务权重、提交时间排序 · 调整权重
+                  </button>
                 </div>
                 <div className="rc-filters">
                   <label className="rc-search">
@@ -509,7 +572,12 @@ export default function RenderApp() {
                             </button>
                             <small>{r.scene_type}</small>
                           </td>
-                          <td>{r.team_id}</td>
+                          <td>
+                            {r.team_id}
+                            <small>
+                              关注权重 {teamWeight(r.team_id, servicePolicy)}×
+                            </small>
+                          </td>
                           <td>{date(r.created_at)}</td>
                           <td>
                             <span className="rc-age">{r.lagMinutes} 分钟</span>
@@ -766,10 +834,10 @@ export default function RenderApp() {
               <section className="rc-panel">
                 <div className="rc-panel-heading">
                   <div>
-                    <h2>团队差异会影响核查是否值得做</h2>
+                    <h2>统一成本下的团队工时情景</h2>
                     <p>
                       全量历史、固定同步间隔 ≥20
-                      分钟规则。失败率只计已知结果，成本计入全部命中任务。
+                      分钟规则。失败率只计已知结果，成本计入全部命中任务。此表不用于决定客户重要性或取消必要检查。
                     </p>
                   </div>
                 </div>
@@ -825,7 +893,7 @@ export default function RenderApp() {
                 <p className="rc-fineprint">
                   海外定制组命中 69 个任务，含 1 个未知；50% 情景净损失 600
                   工时，盈亏点约
-                  88.46%。分组结果是探索发现，尚未据此排除团队或另定阈值，应先确认任务结构、采集口径和干预效果。
+                  88.46%。这是减少渲染失败的情景账，未计入交付保障、新功能验证和客户额外投入，不能据此削减重点项目服务。业务权重和无结果核查另见“业务保障与权重”。
                 </p>
               </section>
               <section className="rc-panel">
