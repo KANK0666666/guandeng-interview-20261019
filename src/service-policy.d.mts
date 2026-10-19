@@ -58,6 +58,25 @@ export function serviceImpact(
     Omit<ImpactGroup, "name" | "policy"> &
     ImpactGroup["policy"];
 };
+export type ReviewCostValues = {
+  successfulCheckHours: number;
+  failedCheckHours: number;
+  unknownCheckHours: number;
+  baselineFailureHours: number;
+  remainingFailureHours: number;
+  totalScenarioHours: number;
+  breakEvenEffectiveness: number | null;
+  assessment: "equal" | "lower" | "higher";
+};
+export function reviewCostAccounting(
+  groups: ImpactGroup[],
+  effectiveness: number,
+  costs: { crash: number; intercept: number },
+): {
+  teams: (ReturnType<typeof serviceImpact>["teams"][number] &
+    ReviewCostValues)[];
+  totals: ReturnType<typeof serviceImpact>["totals"] & ReviewCostValues;
+};
 export function selectHistoricalTasks<
   T extends {
     team_id: string;

@@ -151,6 +151,42 @@ export function ruleOutcomeBreakdown(groups) {
   );
 }
 
+// Cost ledger uses the same 120/20 accounting, with no business-weight multiplier.
+export function reviewCostAccounting(groups, effectiveness, costs) {
+  const base = serviceImpact(
+    groups,
+    { ...DEFAULT_SERVICE_POLICY, kaWeight: 1, customWeight: 1 },
+    effectiveness,
+    costs,
+  );
+  const account = (row, policy) => {
+    const baselineFailureHours = row.failed * costs.crash;
+    const remainingFailureHours = row.expectedRemainingFailures * costs.crash;
+    const eligibleLoss = policy.caughtFailures * costs.crash;
+    return {
+      ...row,
+      successfulCheckHours: policy.falseInterceptions * costs.intercept,
+      failedCheckHours: policy.caughtFailures * costs.intercept,
+      unknownCheckHours: policy.interceptedUnknown * costs.intercept,
+      baselineFailureHours,
+      remainingFailureHours,
+      totalScenarioHours: remainingFailureHours + row.checkHours,
+      breakEvenEffectiveness:
+        eligibleLoss > 0 ? row.checkHours / eligibleLoss : null,
+      assessment:
+        Math.abs(row.netHours) < 1e-8
+          ? "equal"
+          : row.netHours > 0
+            ? "lower"
+            : "higher",
+    };
+  };
+  return {
+    teams: base.teams.map((group) => account(group, group.policy)),
+    totals: account(base.totals, base.totals),
+  };
+}
+
 export function weightedFailureCoverage(groups, policy) {
   const weightedFailures = groups.reduce(
     (sum, g) => sum + g.failed * teamWeight(g.name, policy),

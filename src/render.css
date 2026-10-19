@@ -564,6 +564,110 @@ select:focus-visible {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+.rc-cost-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  width: 100%;
+  margin-bottom: 16px;
+  border: 1px solid #d9e7de;
+  border-radius: 7px;
+  background: #f5faf7;
+  padding: 13px;
+  color: #506d5d;
+  text-align: left;
+  font-size: 11px;
+}
+.rc-cost-preview b {
+  color: #2c7052;
+  font-size: 14px;
+}
+.rc-cost-preview small {
+  margin-left: auto;
+  font-size: 10px;
+}
+.rc-outcome-card > .rc-quadrant-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  gap: 7px 10px;
+  border-top: 1px solid #e9e0c9;
+  padding-top: 10px;
+  font-size: 10px;
+  font-weight: 400;
+}
+.rc-cost-ledger {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid #dce7df;
+  scroll-margin-top: 18px;
+}
+.rc-cost-ledger h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+.rc-cost-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.rc-cost-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid #dee6e2;
+  border-radius: 7px;
+  background: #f6f9f7;
+}
+.rc-cost-summary span {
+  color: #627a6a;
+  font-size: 11px;
+}
+.rc-cost-summary strong {
+  color: #326f52;
+  font-size: 24px;
+}
+.rc-cost-summary small {
+  color: #6d7f73;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.rc-cost-summary .rc-cost-balance.higher {
+  background: #fff3ed;
+  border-color: #ecd8cd;
+}
+.rc-cost-summary .rc-cost-balance.higher strong {
+  color: #a65336;
+}
+.rc-cost-comparison,
+.rc-cost-formula {
+  color: #607465;
+  font-size: 11px;
+  line-height: 1.9;
+}
+.rc-cost-ledger th,
+.rc-cost-ledger td {
+  padding: 12px 10px;
+}
+.rc-cost-drill {
+  padding: 0;
+  color: #377052;
+  background: none;
+  text-decoration: underline;
+  font-size: 11px;
+}
+@media (max-width: 700px) {
+  .rc-cost-summary {
+    grid-template-columns: 1fr;
+  }
+  .rc-outcome-card > .rc-quadrant-breakdown {
+    grid-template-columns: 1fr;
+  }
+}
 .rc-outcome-card {
   display: flex;
   flex-direction: column;

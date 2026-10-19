@@ -433,7 +433,13 @@ export default function RenderApp() {
             />
           ) : tab === "queue" ? (
             <>
-              <RuleOutcomeMatrix groups={m.byTeam} onShowQueue={showHistory} />
+              <RuleOutcomeMatrix
+                groups={m.byTeam}
+                effect={effect}
+                onEffectChange={setEffect}
+                costs={m.costs}
+                onShowQueue={showHistory}
+              />
               <div className="rc-two-col">
                 <section className="rc-panel rc-checker">
                   <div className="rc-panel-heading">

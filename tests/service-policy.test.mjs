@@ -12,6 +12,7 @@ import {
   serviceImpact,
   selectHistoricalTasks,
   ruleOutcomeBreakdown,
+  reviewCostAccounting,
   sortHistoricalQueue,
   weightedFailureCoverage,
 } from "../src/service-policy.mjs";
@@ -453,4 +454,97 @@ test("outcome quadrants reconcile with task drill-downs and keep unknown outcome
       groups.reduce((sum, group) => sum + group.jobs, 0),
     );
   }
+});
+
+test("cost ledger includes successful and unknown checks once and reconciles baseline versus intervention", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const { teams, totals } = reviewCostAccounting(
+    metrics.byTeam,
+    50,
+    metrics.costs,
+  );
+  assert.equal(totals.successfulCheckHours, 2920);
+  assert.equal(totals.failedCheckHours, 2240);
+  assert.equal(totals.unknownCheckHours, 280);
+  assert.equal(
+    totals.successfulCheckHours +
+      totals.failedCheckHours +
+      totals.unknownCheckHours,
+    totals.checkHours,
+  );
+  assert.equal(totals.baselineFailureHours, 16080);
+  assert.equal(totals.remainingFailureHours, 9360);
+  assert.equal(totals.totalScenarioHours, 14800);
+  assert.equal(
+    totals.baselineFailureHours - totals.totalScenarioHours,
+    totals.netHours,
+  );
+  assert.equal(totals.netHours, 1280);
+  const ka = teams.find((group) => group.name === KA_TEAM);
+  const custom = teams.find((group) => group.name === CUSTOM_TEAM);
+  assert.equal(ka.policy.falseInterceptions, 25);
+  assert.equal(custom.policy.falseInterceptions, 55);
+  assert.equal(ka.successfulCheckHours, 500);
+  assert.equal(custom.successfulCheckHours, 1100);
+  assert.equal(ka.netHours, 740);
+  assert.equal(ka.assessment, "lower");
+  assert.equal(custom.netHours, -600);
+  assert.equal(custom.assessment, "higher");
+  for (const group of teams) {
+    assert.equal(
+      group.baselineFailureHours - group.totalScenarioHours,
+      group.netHours,
+    );
+    assert.equal(
+      group.breakEvenEffectiveness,
+      group.checkHours / (group.policy.caughtFailures * metrics.costs.crash),
+    );
+  }
+});
+
+test("cost ledger identifies extra load and break-even without treating absent failures as certain benefit", () => {
+  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
+  const base = reviewCostAccounting(metrics.byTeam, 50, metrics.costs);
+  const atBreakEven = reviewCostAccounting(
+    metrics.byTeam,
+    base.totals.breakEvenEffectiveness * 100,
+    metrics.costs,
+  );
+  assert.equal(atBreakEven.totals.assessment, "equal");
+  assert.equal(
+    reviewCostAccounting(metrics.byTeam, 0, metrics.costs).totals.assessment,
+    "higher",
+  );
+  assert.equal(
+    reviewCostAccounting(metrics.byTeam, 100, metrics.costs).totals.assessment,
+    "lower",
+  );
+  const custom = metrics.byTeam.filter((group) => group.name === CUSTOM_TEAM);
+  assert.equal(
+    reviewCostAccounting(custom, 90, metrics.costs).totals.netHours,
+    24,
+  );
+  const noFailures = [
+    {
+      name: KA_TEAM,
+      jobs: 2,
+      failed: 0,
+      succeeded: 1,
+      unknown: 1,
+      policy: {
+        intercepted: 2,
+        caughtFailures: 0,
+        falseInterceptions: 1,
+        interceptedUnknown: 1,
+      },
+    },
+  ];
+  const result = reviewCostAccounting(noFailures, 100, metrics.costs).totals;
+  assert.equal(result.netHours, -40);
+  assert.equal(result.breakEvenEffectiveness, null);
+  assert.equal(result.assessment, "higher");
+  assert.equal(
+    reviewCostAccounting([], 50, metrics.costs).totals.assessment,
+    "equal",
+  );
 });

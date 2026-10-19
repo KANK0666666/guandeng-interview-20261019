@@ -95,7 +95,13 @@ export default function ServicePolicyPanel({
         </div>
         <span className="rc-pill">业务假设 · 本地演示</span>
       </div>
-      <RuleOutcomeMatrix groups={teams} onShowQueue={onShowQueue} />
+      <RuleOutcomeMatrix
+        groups={teams}
+        effect={effect}
+        onEffectChange={onEffectChange}
+        costs={costs}
+        onShowQueue={onShowQueue}
+      />
       <section className="rc-panel rc-live-overview">
         <div className="rc-panel-heading">
           <div>

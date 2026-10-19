@@ -1,20 +1,39 @@
 import { useState } from "react";
+import ReviewCostLedger from "./ReviewCostLedger";
 import {
   ruleOutcomeBreakdown,
+  reviewCostAccounting,
   type HistoryFilters,
   type ImpactGroup,
 } from "./service-policy.mjs";
 
 type Props = {
   groups: ImpactGroup[];
+  effect: number;
+  onEffectChange: (effect: number) => void;
+  costs: { crash: number; intercept: number };
   onShowQueue: (filters?: HistoryFilters) => void;
 };
 
-export default function RuleOutcomeMatrix({ groups, onShowQueue }: Props) {
+export default function RuleOutcomeMatrix({
+  groups,
+  effect,
+  onEffectChange,
+  costs,
+  onShowQueue,
+}: Props) {
   const [team, setTeam] = useState("");
-  const counts = ruleOutcomeBreakdown(
-    team ? groups.filter((group) => group.name === team) : groups,
-  );
+  const selectedGroups = team
+    ? groups.filter((group) => group.name === team)
+    : groups;
+  const counts = ruleOutcomeBreakdown(selectedGroups);
+  const costPreview = reviewCostAccounting(
+    selectedGroups,
+    effect,
+    costs,
+  ).totals;
+  const n = (value: number) =>
+    value.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
   const cards = [
     {
       key: "successUnflagged",
@@ -54,7 +73,9 @@ export default function RuleOutcomeMatrix({ groups, onShowQueue }: Props) {
       <div className="rc-panel-heading">
         <div>
           <h2>成功与失败，规则有没有提前圈到</h2>
-          <p>历史结果 × 同步规则回放；点击查看每个真实任务。</p>
+          <p>
+            历史结果 × 同步规则回放；按任务计数，不代表客户人数。点击查看明细。
+          </p>
         </div>
         <select
           aria-label="结果四象限团队筛选"
@@ -67,6 +88,31 @@ export default function RuleOutcomeMatrix({ groups, onShowQueue }: Props) {
           ))}
         </select>
       </div>
+      <button
+        className="rc-cost-preview"
+        data-testid="cost-preview"
+        onClick={() =>
+          document
+            .getElementById("review-cost-ledger")
+            ?.scrollIntoView({ block: "start", behavior: "smooth" })
+        }
+      >
+        <span>
+          核查投入 <b>{n(costPreview.checkHours)}</b> 工时
+        </span>
+        <span>
+          {effect}% 有效时预计避免损失 <b>{n(costPreview.avoidedHours)}</b>
+        </span>
+        <span>
+          {costPreview.assessment === "higher"
+            ? "净增加负荷"
+            : costPreview.assessment === "equal"
+              ? "工时持平"
+              : "净节省"}{" "}
+          <b>{n(Math.abs(costPreview.netHours))}</b> 工时
+        </span>
+        <small>查看完整工时账 ↓</small>
+      </button>
       <div className="rc-outcome-grid">
         {cards.map((card) => (
           <button
@@ -82,6 +128,18 @@ export default function RuleOutcomeMatrix({ groups, onShowQueue }: Props) {
               {counts[card.key]} <small>个</small>
             </strong>
             <p>{card.meaning}</p>
+            {card.key === "successFlagged" && (
+              <span
+                className="rc-quadrant-breakdown"
+                data-testid="successful-flagged-breakdown"
+              >
+                {selectedGroups.map((group) => (
+                  <span key={group.name}>
+                    {group.name} <b>{group.policy.falseInterceptions}</b>
+                  </span>
+                ))}
+              </span>
+            )}
             <small>查看任务 →</small>
           </button>
         ))}
@@ -105,6 +163,13 @@ export default function RuleOutcomeMatrix({ groups, onShowQueue }: Props) {
         </button>
         ，不放进成功或失败。
       </p>
+      <ReviewCostLedger
+        groups={selectedGroups}
+        effect={effect}
+        onEffectChange={onEffectChange}
+        costs={costs}
+        onShowQueue={onShowQueue}
+      />
       <p className="rc-policy-note">
         “被圈到”不等于实际已经拦截、修复或成功交付。数据没有人工介入记录、质量验收、客户满意度或续费结果。更早且准确地发现风险能留出处理时间；客户收益仍需看修复、交期和额外负担的实际变化。
       </p>
