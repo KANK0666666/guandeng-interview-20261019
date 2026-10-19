@@ -49,6 +49,37 @@ select:focus-visible {
   outline: 3px solid #99cbc0;
   outline-offset: 3px;
 }
+.rc-feature-timing {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e7d5b6;
+  border-radius: 10px;
+  background: #fffaf1;
+  color: #6a4d28;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.rc-feature-timing summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.rc-feature-timing p {
+  margin: 10px 0;
+}
+.rc-feature-timing small {
+  display: block;
+  font-size: 11px;
+}
+.rc-timing-label {
+  display: block;
+  margin-top: 4px;
+  color: #805a25;
+  font-size: 10px;
+}
+.rc-detail-timing strong {
+  display: block;
+  margin-bottom: 4px;
+}
 .render-app {
   display: flex;
   min-height: 100vh;

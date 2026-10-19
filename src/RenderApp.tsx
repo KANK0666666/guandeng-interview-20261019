@@ -77,6 +77,13 @@ type Metrics = {
     sha256: string;
   };
   outcomes: Counts;
+  featureTiming: {
+    gpu_mem_free_mb: {
+      label: string;
+      explanation: string;
+      requiredEvidence: string;
+    };
+  };
   costs: { crash: number; intercept: number };
   selectedRule: { label: string; lagMinutes: number };
   all: Policy;
@@ -380,6 +387,15 @@ export default function RenderApp() {
               导出全部预检清单
             </a>
           </div>
+          <details className="rc-feature-timing" data-testid="feature-timing">
+            <summary>{m.featureTiming.gpu_mem_free_mb.label}</summary>
+            <p>{m.featureTiming.gpu_mem_free_mb.explanation}</p>
+            <p>
+              示意（非本题记录）：12:00 提交，12:30 才采到显存不足。12:30
+              可以触发运行中处理，但不能说 12:00 就已预知。
+            </p>
+            <small>{m.featureTiming.gpu_mem_free_mb.requiredEvidence}</small>
+          </details>
           {tab !== "service" && (
             <>
               <div className="rc-notice">
@@ -448,7 +464,7 @@ export default function RenderApp() {
                         <ShieldCheck size={18} />
                         提交前预检
                       </h2>
-                      <p>仅使用提交前可获得的两个时间，不读取最终结果。</p>
+                      <p>仅用两个时间；上线需确认是提交时快照，不读取最终结果或显存。</p>
                     </div>
                     <span className="rc-small-label">北京时间 UTC+8</span>
                   </div>
@@ -794,7 +810,7 @@ export default function RenderApp() {
                     <h2>先选规则，再做时间复核</h2>
                     <p>
                       候选共 {m.candidates.length} 项，按 9 月 1—5
-                      日净收益选择。已探索过全量分布，因此后两天不是严格盲测。
+                      日净收益选择。已探索过全量分布，因此后两天不是严格盲测。含显存候选的采集时点未知，仅为事后比较。
                     </p>
                   </div>
                 </div>
@@ -1031,7 +1047,14 @@ export default function RenderApp() {
                     <tbody>
                       {m.baselines.map((b) => (
                         <tr key={b.id}>
-                          <td>{b.label}</td>
+                          <td>
+                            {b.label}
+                            {b.id.startsWith("mem-") && (
+                              <small className="rc-timing-label">
+                                时点未知 · 仅事后比较
+                              </small>
+                            )}
+                          </td>
                           <td>{b.all.intercepted}</td>
                           <td>{n(b.all.netHoursAtFullEffect)}</td>
                         </tr>
@@ -1091,7 +1114,7 @@ export default function RenderApp() {
                 ["团队", selected.team_id],
                 ["提交时间", selected.created_at],
                 ["同步完成时间", selected.asset_synced_at],
-                ["剩余显存（原始 MB）", selected.gpu_mem_free_mb],
+                ["剩余显存（原始 MB；采集时点未知）", selected.gpu_mem_free_mb],
                 ["多边形面数（原始值）", selected.polygon_count],
                 ["历史结果", outcomeName[selected.outcome]],
                 ["源数据记录序号（不含表头）", selected.sourceRows.join(", ")],
@@ -1102,6 +1125,10 @@ export default function RenderApp() {
                 </div>
               ))}
             </dl>
+            <p className="rc-feature-timing rc-detail-timing">
+              <strong>显存可能含未来信息</strong>
+              CSV 未记录它何时被采集、何时可被系统使用。若来自运行中或失败后，不能用于提交前预测；“带入预检”仅带入两个时间。
+            </p>
             <button
               className="rc-primary"
               onClick={() => {
