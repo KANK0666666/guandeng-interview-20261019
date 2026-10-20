@@ -16,7 +16,6 @@ import {
   interceptionCostAccounting,
   completeStrategyAccounting,
   sortHistoricalQueue,
-  weightedFailureCoverage,
 } from "../src/service-policy.mjs";
 import { loadRender } from "../server/render.mjs";
 import { fileURLToPath } from "node:url";
@@ -29,146 +28,168 @@ const pending = {
   assigned: false,
 };
 
-test("business settings recover from invalid storage and stay within usable ranges", () => {
-  for (const value of [null, undefined, "bad", []]) {
+const configured = {
+  noResultMinutes: 10,
+  teams: [KA_TEAM, CUSTOM_TEAM],
+  enabled: true,
+};
+
+test("follow-up is unset and disabled until a decision maker selects scope and time", () => {
+  for (const value of [null, undefined, "bad", []])
     assert.deepEqual(normalizeServicePolicy(value), DEFAULT_SERVICE_POLICY);
+  for (const noResultMinutes of [6, 9, 10]) {
+    const legacy = normalizeServicePolicy({ noResultMinutes, kaWeight: 100 });
+    assert.deepEqual(legacy, { noResultMinutes, teams: [], enabled: false });
+    assert.equal(serviceDecision(pending, legacy).code, "disabled");
   }
-  assert.deepEqual(
-    normalizeServicePolicy({
-      kaWeight: -5,
-      customWeight: 999,
-      noResultMinutes: 0,
-    }),
-    { kaWeight: 1, customWeight: 500, noResultMinutes: 1 },
+  assert.equal(serviceDecision(pending).code, "disabled");
+  assert.equal(
+    serviceDecision(pending, { ...configured, enabled: false }).code,
+    "disabled",
   );
-  assert.deepEqual(
-    normalizeServicePolicy({
-      kaWeight: Infinity,
-      customWeight: "50",
-      noResultMinutes: NaN,
-    }),
-    DEFAULT_SERVICE_POLICY,
+  assert.equal(
+    serviceDecision(pending, { ...configured, teams: [] }).code,
+    "disabled",
   );
-  assert.deepEqual(
-    normalizeServicePolicy({
-      kaWeight: 110.7,
-      customWeight: 40.2,
-      noResultMinutes: 40,
-    }),
-    { kaWeight: 111, customWeight: 40, noResultMinutes: 30 },
+  assert.equal(
+    serviceDecision(pending, { ...configured, noResultMinutes: null }).code,
+    "disabled",
   );
 });
 
-test("KA and custom follow-up begins exactly at the deadline even at weight one", () => {
-  const lowWeights = { kaWeight: 1, customWeight: 1, noResultMinutes: 10 };
-  for (const team of [KA_TEAM, CUSTOM_TEAM]) {
+test("follow-up validation rejects invalid times and filters unsupported teams", () => {
+  for (const noResultMinutes of [null, 0, -1, Infinity, NaN, "10", 10.7]) {
+    const result = normalizeServicePolicy({ ...configured, noResultMinutes });
+    assert.equal(result.noResultMinutes, null);
+    assert.equal(result.enabled, false);
+  }
+  assert.deepEqual(
+    normalizeServicePolicy({
+      ...configured,
+      noResultMinutes: 45,
+      teams: [KA_TEAM, KA_TEAM, "invalid"],
+      kaWeight: 500,
+    }),
+    { noResultMinutes: 45, teams: [KA_TEAM], enabled: true },
+  );
+  assert.equal(
+    normalizeServicePolicy({ ...configured, enabled: "true" }).enabled,
+    false,
+  );
+});
+
+test("follow-up begins exactly at the configured deadline for any explicitly selected team", () => {
+  for (const team of TEAMS) {
+    const settings = { ...configured, teams: [team] };
     assert.equal(
-      serviceDecision({ ...pending, team, elapsedMinutes: 9.99 }, lowWeights)
+      serviceDecision({ ...pending, team, elapsedMinutes: 9.99 }, settings)
         .code,
       "watch",
     );
     assert.equal(
-      serviceDecision({ ...pending, team }, lowWeights).code,
+      serviceDecision({ ...pending, team }, settings).code,
       "follow-up",
     );
     assert.equal(
-      serviceDecision({ ...pending, team, elapsedMinutes: 500 }, lowWeights)
-        .code,
+      serviceDecision({ ...pending, team, elapsedMinutes: 500 }, settings).code,
       "follow-up",
     );
-    const later = { ...lowWeights, noResultMinutes: 15 };
+    const later = { ...settings, noResultMinutes: 15 };
     assert.equal(serviceDecision({ ...pending, team }, later).code, "watch");
     assert.equal(
       serviceDecision({ ...pending, team, elapsedMinutes: 15 }, later).code,
       "follow-up",
     );
   }
+  assert.equal(
+    serviceDecision(pending, { ...configured, teams: [CUSTOM_TEAM] }).code,
+    "existing-process",
+  );
 });
 
-test("submission waiting clock is independent of asset sync age and historical missing outcomes", () => {
+test("waiting time is independent of sync age and historical missing outcomes", () => {
   assert.equal(
-    serviceDecision({ ...pending, lagMinutes: 0 }).code,
+    serviceDecision({ ...pending, lagMinutes: 0 }, configured).code,
     "follow-up",
   );
   assert.equal(
-    serviceDecision({ ...pending, elapsedMinutes: 2, lagMinutes: 70 }).code,
+    serviceDecision(
+      { ...pending, elapsedMinutes: 2, lagMinutes: 70 },
+      configured,
+    ).code,
     "watch",
   );
   assert.equal(
-    serviceDecision({ ...pending, status: "unknown" }).code,
+    serviceDecision({ ...pending, status: "unknown" }, configured).code,
     "check-input",
   );
   assert.equal(
-    serviceDecision({ ...pending, elapsedMinutes: null, is_success: "" }).code,
+    serviceDecision(
+      { ...pending, elapsedMinutes: null, is_success: "" },
+      configured,
+    ).code,
     "check-input",
   );
 });
 
-test("every team's explicit failure gets immediate help; returned success ends waiting follow-up", () => {
+test("manual simulation handles explicit failure and success separately from waiting thresholds", () => {
   for (const team of TEAMS) {
+    for (const elapsedMinutes of [0, null])
+      assert.equal(
+        serviceDecision(
+          { ...pending, team, status: "failure", elapsedMinutes },
+          configured,
+        ).code,
+        "fault",
+      );
     assert.equal(
-      serviceDecision({
-        ...pending,
-        team,
-        status: "failure",
-        elapsedMinutes: 0,
-      }).code,
-      "fault",
-    );
-    assert.equal(
-      serviceDecision({
-        ...pending,
-        team,
-        status: "failure",
-        elapsedMinutes: null,
-      }).code,
-      "fault",
-    );
-    assert.equal(
-      serviceDecision({
-        ...pending,
-        team,
-        status: "success",
-        elapsedMinutes: 99,
-      }).code,
+      serviceDecision(
+        { ...pending, team, status: "success", elapsedMinutes: 99 },
+        configured,
+      ).code,
       "completed",
     );
   }
 });
 
-test("assigned cases avoid duplicate follow-up and ordinary waiting tasks retain existing service", () => {
+test("assigned cases avoid duplicate follow-up; missing simulation inputs never create tasks", () => {
   assert.equal(
-    serviceDecision({ ...pending, assigned: true }).code,
+    serviceDecision({ ...pending, assigned: true }, configured).code,
     "in-progress",
   );
   assert.equal(
-    serviceDecision({
-      ...pending,
-      team: "国内电商组",
-      status: "failure",
-      assigned: true,
-    }).code,
+    serviceDecision(
+      { ...pending, team: "国内电商组", status: "failure", assigned: true },
+      configured,
+    ).code,
     "in-progress",
   );
-  for (const team of ["国内电商组", "生态服务商组"]) {
+  for (const team of ["国内电商组", "生态服务商组"])
     assert.equal(
-      serviceDecision({ ...pending, team, elapsedMinutes: 99 }).code,
+      serviceDecision({ ...pending, team, elapsedMinutes: 99 }, configured)
+        .code,
       "existing-process",
     );
-  }
-  for (const elapsedMinutes of [null, undefined, -1, NaN, Infinity, "12"]) {
+  for (const elapsedMinutes of [null, undefined, -1, NaN, Infinity, "12"])
     assert.equal(
-      serviceDecision({ ...pending, elapsedMinutes }).code,
+      serviceDecision({ ...pending, elapsedMinutes }, configured).code,
       "check-input",
     );
-  }
+  for (const team of ["", "未确认团队"])
+    assert.equal(
+      serviceDecision({ ...pending, team }, configured).code,
+      "check-input",
+    );
   assert.equal(
-    serviceDecision({ ...pending, team: "未确认团队" }).code,
+    serviceDecision(
+      { team: "", status: "", elapsedMinutes: null, assigned: false },
+      configured,
+    ).code,
     "check-input",
   );
 });
 
-test("historical order follows adjustable importance then submission time without reading outcome or mutating rows", () => {
+test("historical order follows submission time and task ID, independent of team and outcome", () => {
   const rows = [
     {
       job_id: "10",
@@ -197,100 +218,30 @@ test("historical order follows adjustable importance then submission time withou
   ];
   const before = structuredClone(rows);
   const ids = (list) => list.map((row) => row.job_id);
-  assert.deepEqual(ids(sortHistoricalQueue(rows)), ["2", "3", "10", "1"]);
-  assert.deepEqual(ids(sortHistoricalQueue(rows, { customWeight: 200 })), [
-    "10",
-    "2",
-    "3",
-    "1",
-  ]);
-  assert.deepEqual(
-    ids(sortHistoricalQueue(rows, { kaWeight: 1, customWeight: 1 })),
-    ["1", "10", "2", "3"],
-  );
+  assert.deepEqual(ids(sortHistoricalQueue(rows)), ["1", "10", "2", "3"]);
   assert.deepEqual(
     ids(
-      sortHistoricalQueue(rows.map((row) => ({ ...row, outcome: "success" }))),
+      sortHistoricalQueue(
+        rows.map((row) => ({
+          ...row,
+          team_id: CUSTOM_TEAM,
+          outcome: "success",
+        })),
+      ),
     ),
-    ["2", "3", "10", "1"],
+    ["1", "10", "2", "3"],
   );
   assert.deepEqual(rows, before);
 });
 
-test("weighted coverage reproduces from the raw CSV and cannot inflate physical hours or hit counts", () => {
-  const records = parse(
-    readFileSync(new URL("../data/render_jobs.csv", import.meta.url)),
-    { columns: true },
-  );
-  const unique = [...new Map(records.map((row) => [row.job_id, row])).values()];
-  const groups = TEAMS.map((name) => {
-    const rows = unique.filter((row) => row.team_id === name);
-    const failures = rows.filter((row) => row.is_success === "0");
-    const hit = (row) =>
-      Date.parse(row.created_at) - Date.parse(row.asset_synced_at) >=
-      20 * 60_000;
-    return {
-      name,
-      failed: failures.length,
-      policy: {
-        intercepted: rows.filter(hit).length,
-        caughtFailures: failures.filter(hit).length,
-      },
-    };
-  });
-  const before = structuredClone(groups);
-  const baseline = weightedFailureCoverage(groups, {
-    kaWeight: 1,
-    customWeight: 1,
-  });
-  const priority = weightedFailureCoverage(groups);
-  assert.equal(baseline.coverage, 112 / 134);
-  assert.equal(priority.weightedCaught, 3756);
-  assert.equal(priority.weightedFailures, 4621);
-  assert.equal(priority.coverage, 3756 / 4621);
-  assert.equal(priority.protectedMissed, 17);
-  assert.equal(
-    weightedFailureCoverage(groups, { kaWeight: 500, customWeight: 500 })
-      .protectedMissed,
-    17,
-  );
-  const intercepted = groups.reduce(
-    (sum, group) => sum + group.policy.intercepted,
-    0,
-  );
-  const caught = groups.reduce(
-    (sum, group) => sum + group.policy.caughtFailures,
-    0,
-  );
-  assert.equal(intercepted, 272);
-  assert.equal(caught * 120 * 0.5 - intercepted * 20, 1280);
-  assert.deepEqual(groups, before);
-});
-
-test("empty failure evidence stays unestimated instead of claiming zero or full coverage", () => {
-  assert.equal(weightedFailureCoverage([]).coverage, null);
-  assert.equal(
-    weightedFailureCoverage([
-      { name: KA_TEAM, failed: 0, policy: { caughtFailures: 0 } },
-    ]).coverage,
-    null,
-  );
-});
-
 test("live scenario separates historical outcomes, expected avoided failures, and full human-check costs", () => {
   const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
-  const half = serviceImpact(
-    metrics.byTeam,
-    DEFAULT_SERVICE_POLICY,
-    50,
-    metrics.costs,
-  );
+  const half = serviceImpact(metrics.byTeam, 50, metrics.costs);
   assert.equal(half.totals.succeeded, 772);
   assert.equal(half.totals.failed, 134);
   assert.equal(half.totals.unknown, 51);
   assert.equal(half.totals.expectedAvoidedFailures, 56);
   assert.equal(half.totals.expectedRemainingFailures, 78);
-  assert.equal(half.totals.weightedAvoidedFailures, 1878);
   assert.equal(half.totals.checkHours, 5440);
   assert.equal(half.totals.avoidedHours, 6720);
   assert.equal(half.totals.netHours, 1280);
@@ -299,91 +250,29 @@ test("live scenario separates historical outcomes, expected avoided failures, an
   assert.equal(custom.expectedRemainingFailures, 18.5);
   assert.equal(custom.checkHours, 1380); // includes 55 successes and one unknown
   assert.equal(custom.netHours, -600);
-  const zero = serviceImpact(
-    metrics.byTeam,
-    DEFAULT_SERVICE_POLICY,
-    0,
-    metrics.costs,
-  );
+  const zero = serviceImpact(metrics.byTeam, 0, metrics.costs);
   assert.equal(zero.totals.expectedRemainingFailures, 134);
   assert.equal(zero.totals.netHours, -5440);
-  assert.equal(zero.totals.weightedAvoidedFailures, 0);
-  const full = serviceImpact(
-    metrics.byTeam,
-    DEFAULT_SERVICE_POLICY,
-    100,
-    metrics.costs,
-  );
+  const full = serviceImpact(metrics.byTeam, 100, metrics.costs);
   assert.equal(full.totals.expectedAvoidedFailures, 112);
   assert.equal(full.totals.expectedRemainingFailures, 22); // never implies all failures fixed
   assert.equal(full.totals.netHours, 8000);
   for (const value of [NaN, Infinity, -1, 101]) {
     assert.throws(
-      () =>
-        serviceImpact(
-          metrics.byTeam,
-          DEFAULT_SERVICE_POLICY,
-          value,
-          metrics.costs,
-        ),
+      () => serviceImpact(metrics.byTeam, value, metrics.costs),
       RangeError,
     );
   }
 });
 
-test("changing importance updates only weighted protection, not historical success or physical hours", () => {
-  const { metrics } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
-  const original = structuredClone(metrics.byTeam);
-  const base = serviceImpact(
-    metrics.byTeam,
-    DEFAULT_SERVICE_POLICY,
-    50,
-    metrics.costs,
-  );
-  const raised = serviceImpact(
-    metrics.byTeam,
-    { ...DEFAULT_SERVICE_POLICY, customWeight: 200 },
-    50,
-    metrics.costs,
-  );
-  assert.equal(
-    base.teams.find((group) => group.name === CUSTOM_TEAM)
-      .weightedAvoidedFailures,
-    195,
-  );
-  assert.equal(
-    raised.teams.find((group) => group.name === CUSTOM_TEAM)
-      .weightedAvoidedFailures,
-    1300,
-  );
-  assert.equal(raised.totals.weightedAvoidedFailures, 2983);
-  for (const key of [
-    "succeeded",
-    "failed",
-    "unknown",
-    "intercepted",
-    "expectedAvoidedFailures",
-    "expectedRemainingFailures",
-    "netHours",
-    "checkHours",
-  ]) {
-    assert.equal(raised.totals[key], base.totals[key]);
-  }
-  assert.deepEqual(metrics.byTeam, original);
-});
-
 test("result drill-down includes all histories and distinguishes them from sync-rule hits", () => {
   const { rows } = loadRender(fileURLToPath(new URL("..", import.meta.url)));
   const filters = { team: CUSTOM_TEAM, scope: "all" };
-  assert.equal(selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY).length, 957);
-  assert.equal(
-    selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, { scope: "hits" })
-      .length,
-    272,
-  );
+  assert.equal(selectHistoricalTasks(rows).length, 957);
+  assert.equal(selectHistoricalTasks(rows, { scope: "hits" }).length, 272);
   const expected = { success: [192, 55], failure: [25, 13], unknown: [16, 1] };
   for (const [outcome, [all, hits]] of Object.entries(expected)) {
-    const history = selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+    const history = selectHistoricalTasks(rows, {
       ...filters,
       outcome,
     });
@@ -394,7 +283,7 @@ test("result drill-down includes all histories and distinguishes them from sync-
       ),
     );
     assert.equal(
-      selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+      selectHistoricalTasks(rows, {
         ...filters,
         outcome,
         scope: "hits",
@@ -402,13 +291,13 @@ test("result drill-down includes all histories and distinguishes them from sync-
       hits,
     );
   }
-  const missed = selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+  const missed = selectHistoricalTasks(rows, {
     ...filters,
     outcome: "failure",
   }).filter((row) => !row.intercept);
   assert.equal(missed.length, 12);
   assert.equal(
-    selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+    selectHistoricalTasks(rows, {
       ...filters,
       query: "不存在的场景",
     }).length,
@@ -444,7 +333,7 @@ test("outcome quadrants reconcile with task drill-downs and keep unknown outcome
     for (const [key, outcome, scope] of mapping) {
       assert.equal(
         counts[key],
-        selectHistoricalTasks(rows, DEFAULT_SERVICE_POLICY, {
+        selectHistoricalTasks(rows, {
           team,
           outcome,
           scope,

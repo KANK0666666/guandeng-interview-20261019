@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { netLabel } from "./presentation.mjs";
 import ReviewCostLedger from "./ReviewCostLedger";
 import {
   ruleOutcomeBreakdown,
@@ -11,14 +12,17 @@ type Props = {
   groups: ImpactGroup[];
   costs: { crash: number; intercept: number };
   onShowQueue: (filters?: HistoryFilters) => void;
+  compact?: boolean;
 };
 
 export default function RuleOutcomeMatrix({
   groups,
   costs,
   onShowQueue,
+  compact = false,
 }: Props) {
   const [team, setTeam] = useState("");
+  const ledgerDetails = useRef<HTMLDetailsElement>(null);
   const selectedGroups = team
     ? groups.filter((group) => group.name === team)
     : groups;
@@ -29,52 +33,60 @@ export default function RuleOutcomeMatrix({
   const cards = [
     {
       key: "successUnflagged",
-      title: "成功，未触发规则",
+      title: "未预警的成功任务",
       scope: "misses",
       outcome: "success",
-      meaning: "历史渲染成功；按规则回放，无需新增这次核查。",
-      accounting: "本轮新增拦截成本 0 工时",
+      meaning: "历史渲染成功，规则也没有安排检查。",
+      accounting: "新增检查工时 0 工时",
+      shortAccounting: "新增检查工时 0 工时",
       tone: "smooth",
     },
     {
       key: "failureUnflagged",
-      title: "失败，未触发规则",
+      title: "漏掉的失败",
       scope: "misses",
       outcome: "failure",
-      meaning: "规则漏掉的失败，优先调查遗漏原因，减少客户反复重试。",
+      meaning: "历史渲染失败，规则没有预警。",
       accounting: `失败损失 ${counts.failureUnflagged} × ${costs.crash} ＝ ${n(costPreview.missedFailureHours)} 工时`,
+      shortAccounting: `失败损失 ${n(costPreview.missedFailureHours)} 工时`,
       tone: "missed",
     },
     {
       key: "failureFlagged",
-      title: "失败，被规则圈到",
+      title: "正确预警",
       scope: "hits",
       outcome: "failure",
-      meaning: "本轮按正确提前拦截避免崩溃记账；后续处理与交付需继续跟进。",
-      accounting: `正确拦截净收益 ${counts.failureFlagged} × (${costs.crash} − ${costs.intercept}) ＝ +${n(costPreview.correctInterceptionNetHours)} 工时`,
+      meaning: "规则提前识别出了历史渲染失败的任务。",
+      accounting: `正确预警节约工时 ${counts.failureFlagged} × (${costs.crash} − ${costs.intercept}) ＝ +${n(costPreview.correctInterceptionNetHours)} 工时`,
+      shortAccounting: `节约 ${n(costPreview.correctInterceptionNetHours)} 工时（已扣对应检查）`,
       tone: "rescue",
     },
     {
       key: "successFlagged",
-      title: "成功，但被规则圈到",
+      title: "多余检查",
       scope: "hits",
       outcome: "success",
-      meaning: "会增加检查投入；新功能、质量验证的价值需要另外记录。",
-      accounting: `额外拦截成本 ${counts.successFlagged} × ${costs.intercept} ＝ ${n(costPreview.successfulCheckHours)} 工时`,
+      meaning: "历史渲染成功，规则仍安排了检查。",
+      accounting: `检查工时 ${counts.successFlagged} × ${costs.intercept} ＝ ${n(costPreview.successfulCheckHours)} 工时`,
+      shortAccounting: `检查工时 ${n(costPreview.successfulCheckHours)} 工时`,
       tone: "extra",
     },
   ] as const;
   return (
-    <section className="rc-panel rc-outcome-matrix">
+    <section
+      className={`rc-panel rc-outcome-matrix${compact ? " rc-outcome-compact" : ""}`}
+    >
       <div className="rc-panel-heading">
         <div>
-          <h2>成功与失败，规则有没有提前圈到</h2>
+          <h2>{compact ? "20 分钟对照方案：预警结果" : "规则的历史测算"}</h2>
           <p>
-            历史结果 × 同步规则回放；按任务计数，不代表客户人数。点击查看明细。
+            {compact
+              ? "正确预警：识别出历史失败；多余检查：历史渲染成功，仍安排检查。"
+              : "历史渲染结果与规则预警交叉比较；点击数字查看任务。"}
           </p>
         </div>
         <select
-          aria-label="结果四象限团队筛选"
+          aria-label="预警结果团队筛选"
           value={team}
           onChange={(event) => setTeam(event.target.value)}
         >
@@ -87,35 +99,38 @@ export default function RuleOutcomeMatrix({
       <button
         className="rc-cost-preview"
         data-testid="cost-preview"
-        onClick={() =>
+        onClick={() => {
+          if (ledgerDetails.current) ledgerDetails.current.open = true;
           document
             .getElementById("review-cost-ledger")
-            ?.scrollIntoView({ block: "start", behavior: "smooth" })
-        }
+            ?.scrollIntoView({ block: "start", behavior: "smooth" });
+        }}
       >
         <span>
-          原规则投入 <b>{n(costPreview.checkHours)}</b> 工时
-        </span>
-        <span>
-          正确拦截净收益 <b>+{n(costPreview.correctInterceptionNetHours)}</b>{" "}
+          {compact ? "检查工时" : "检查工时"} <b>{n(costPreview.checkHours)}</b>{" "}
           工时
         </span>
         <span>
-          {costPreview.assessment === "higher"
-            ? "本轮净增加工时"
-            : costPreview.assessment === "equal"
-              ? "本轮工时持平"
-              : "本轮净节约"}{" "}
+          {compact ? "漏掉的失败损失" : "正确预警节约工时"}{" "}
+          <b>
+            {compact
+              ? n(costPreview.missedFailureHours)
+              : `+${n(costPreview.correctInterceptionNetHours)}`}
+          </b>{" "}
+          工时
+        </span>
+        <span>
+          {netLabel(costPreview.netHours)}{" "}
           <b>{n(Math.abs(costPreview.netHours))}</b> 工时
         </span>
-        <small>查看原规则明细 ↓</small>
+        {!compact && <small>查看对照方案计算明细 ↓</small>}
       </button>
       <div className="rc-outcome-grid">
         {cards.map((card) => (
           <button
             key={card.key}
             className={`rc-outcome-card ${card.tone}`}
-            aria-label={`查看${card.title}任务`}
+            aria-label={`查看${card.title}`}
             onClick={() =>
               onShowQueue({ team, scope: card.scope, outcome: card.outcome })
             }
@@ -124,12 +139,12 @@ export default function RuleOutcomeMatrix({
             <strong data-testid={`quadrant-${card.key}`}>
               {counts[card.key]} <small>个</small>
             </strong>
-            <p>{card.meaning}</p>
+            {!compact && <p>{card.meaning}</p>}
             <span
               className="rc-quadrant-accounting"
               data-testid={`quadrant-cost-${card.key}`}
             >
-              {card.accounting}
+              {compact ? card.shortAccounting : card.accounting}
             </span>
             {card.key === "successFlagged" && (
               <span
@@ -148,13 +163,13 @@ export default function RuleOutcomeMatrix({
         ))}
       </div>
       <p className="rc-matrix-unknown">
-        未回传单列：
+        结果未知：
         <button
           onClick={() =>
             onShowQueue({ team, scope: "hits", outcome: "unknown" })
           }
         >
-          已触发 {counts.unknownFlagged} 个
+          已预警 {counts.unknownFlagged} 个
         </button>{" "}
         /{" "}
         <button
@@ -162,19 +177,36 @@ export default function RuleOutcomeMatrix({
             onShowQueue({ team, scope: "misses", outcome: "unknown" })
           }
         >
-          未触发 {counts.unknownUnflagged} 个
+          未预警 {counts.unknownUnflagged} 个
         </button>
-        ，不放进成功或失败。已触发的未知任务仍扣{" "}
-        {n(costPreview.unknownCheckHours)} 工时，不计避免失败收益。
+        {compact
+          ? `；已预警的仍计检查工时 ${n(costPreview.unknownCheckHours)} 工时。`
+          : `，不放进成功或失败。已预警的结果未知的任务仍扣 ${n(costPreview.unknownCheckHours)} 工时，不计避免失败收益。`}
       </p>
-      <ReviewCostLedger
-        groups={selectedGroups}
-        costs={costs}
-        onShowQueue={onShowQueue}
-      />
-      <p className="rc-policy-note">
-        “被圈到”不等于实际已经拦截、修复或成功交付。数据没有人工介入记录、质量验收、客户满意度或续费结果。更早且准确地发现风险能留出处理时间；客户收益仍需看修复、交期和额外负担的实际变化。
-      </p>
+      {compact ? (
+        <details className="rc-inline-details" ref={ledgerDetails}>
+          <summary>查看计算明细</summary>
+          <ReviewCostLedger
+            groups={selectedGroups}
+            costs={costs}
+            onShowQueue={onShowQueue}
+          />
+          <p className="rc-policy-note">
+            历史测算，不代表已经实际修复。正确预警后按拦截避免本轮崩溃记账；结果未知不计避免失败收益，检查仍计工时。
+          </p>
+        </details>
+      ) : (
+        <>
+          <ReviewCostLedger
+            groups={selectedGroups}
+            costs={costs}
+            onShowQueue={onShowQueue}
+          />
+          <p className="rc-policy-note">
+            历史测算，不代表已经实际修复。检查、后续处理和重复检查的实际工时需要另行记录。
+          </p>
+        </>
+      )}
     </section>
   );
 }

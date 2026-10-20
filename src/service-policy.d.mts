@@ -1,11 +1,11 @@
 export type ServicePolicy = {
-  kaWeight: number;
-  customWeight: number;
-  noResultMinutes: number;
+  noResultMinutes: number | null;
+  teams: readonly string[];
+  enabled: boolean;
 };
 export type ServiceScenario = {
   team: string;
-  status: "pending" | "success" | "failure";
+  status: "" | "pending" | "success" | "failure";
   elapsedMinutes: number | null;
   assigned: boolean;
 };
@@ -34,7 +34,6 @@ export type ImpactGroup = CoverageGroup & {
 export type ImpactValues = {
   expectedAvoidedFailures: number;
   expectedRemainingFailures: number;
-  weightedAvoidedFailures: number;
   checkHours: number;
   avoidedHours: number;
   netHours: number;
@@ -49,11 +48,10 @@ export function ruleOutcomeBreakdown(groups: ImpactGroup[]): {
 };
 export function serviceImpact(
   groups: ImpactGroup[],
-  policy: ServicePolicy,
   effectiveness: number,
   costs: { crash: number; intercept: number },
 ): {
-  teams: (ImpactGroup & ImpactValues & { weight: number })[];
+  teams: (ImpactGroup & ImpactValues)[];
   totals: ImpactValues &
     Omit<ImpactGroup, "name" | "policy"> &
     ImpactGroup["policy"];
@@ -102,7 +100,7 @@ export function selectHistoricalTasks<
     outcome: string;
     intercept: boolean;
   },
->(rows: T[], policy: ServicePolicy, filters?: HistoryFilters): T[];
+>(rows: T[], filters?: HistoryFilters): T[];
 export type StrategyCostInputs = {
   additionalChecks: number | null;
   otherHours: number | null;
@@ -131,25 +129,15 @@ export const CUSTOM_TEAM: string;
 export const TEAMS: string[];
 export const DEFAULT_SERVICE_POLICY: Readonly<ServicePolicy>;
 export function normalizeServicePolicy(value: unknown): ServicePolicy;
-export function teamWeight(team: string, policy: ServicePolicy): number;
-export function isProtectedTeam(team: string): boolean;
 export function sortHistoricalQueue<
   T extends { team_id: string; created_at: string; job_id: string },
->(rows: T[], policy: ServicePolicy): T[];
-export function weightedFailureCoverage(
-  groups: CoverageGroup[],
-  policy: ServicePolicy,
-): {
-  weightedFailures: number;
-  weightedCaught: number;
-  coverage: number | null;
-  protectedMissed: number;
-};
+>(rows: T[]): T[];
 export function serviceDecision(
   scenario: ServiceScenario,
   policy: ServicePolicy,
 ): {
   code:
+    | "disabled"
     | "check-input"
     | "completed"
     | "in-progress"
@@ -157,8 +145,7 @@ export function serviceDecision(
     | "follow-up"
     | "watch"
     | "existing-process";
-  weight: number;
-  threshold: number;
+  threshold: number | null;
   title: string;
   owner: string;
   detail: string;

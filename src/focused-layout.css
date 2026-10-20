@@ -1,0 +1,377 @@
+.rc-page-heading h1 {
+  margin-top: 0;
+}
+.rc-page-heading p,
+.rc-panel-heading p {
+  color: #6a7b73;
+  font-size: 12px;
+}
+.rc-strategy-focused .rc-strategy-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.rc-strategy-focused .rc-strategy-stats > button,
+.rc-strategy-focused .rc-strategy-stats > div {
+  padding: 20px 18px;
+  border: 1px solid #dfe7e2;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  color: inherit;
+  min-width: 0;
+}
+.rc-strategy-focused .rc-strategy-stats > button:hover {
+  border-color: #70a68e;
+  background: #f8fbf9;
+}
+.rc-strategy-focused .rc-strategy-stats > * > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: 12px;
+}
+.rc-strategy-focused .rc-strategy-stats strong {
+  font-size: 32px;
+  margin: 14px 0 10px;
+}
+.rc-strategy-focused .rc-strategy-stats p,
+.rc-strategy-focused .rc-strategy-stats p span {
+  font-size: 11px;
+  color: #6c7d74;
+}
+.rc-strategy-focused .rc-strategy-stats .rc-strategy-net {
+  background: #edf6f0;
+  border-color: #aacfb9;
+}
+.rc-strategy-focused .rc-strategy-net.positive strong {
+  color: #246750;
+}
+.rc-strategy-focused .rc-strategy-net.negative strong {
+  color: #b24332;
+}
+.rc-strategy-focused .rc-strategy-main-table {
+  min-width: 700px;
+}
+.rc-strategy-focused .rc-strategy-main-table td,
+.rc-strategy-focused .rc-strategy-main-table th {
+  padding: 18px 9px;
+}
+.rc-strategy-focused .rc-strategy-slider-cell label {
+  min-width: 180px;
+}
+.rc-strategy-focused .rc-strategy-slider-cell input {
+  width: 120px;
+}
+.rc-cell-link {
+  padding: 4px 6px;
+  margin-right: -6px;
+  color: #2e7257;
+  font-weight: 650;
+  background: transparent;
+  border-radius: 4px;
+  text-decoration: underline;
+  text-decoration-color: #b8ccbf;
+  text-underline-offset: 4px;
+}
+.rc-cell-link:hover {
+  background: #e9f2ec;
+}
+.rc-strategy-focused .rc-comparison-compact {
+  padding: 14px 0 0;
+  margin: 0;
+  gap: 8px 20px;
+  font-size: 12px;
+}
+.rc-comparison-compact > span:first-child {
+  color: #6f7e76;
+}
+.rc-strategy-focused .rc-strategy-calculation {
+  margin-top: 14px;
+}
+.rc-page-note,
+.rc-context-line {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #6c7d74;
+  margin: 0 0 20px;
+}
+.rc-context-line {
+  padding: 0 2px;
+}
+.rc-panel.rc-disclosure {
+  padding: 0;
+  overflow: hidden;
+}
+.rc-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  cursor: pointer;
+  list-style: none;
+}
+.rc-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.rc-disclosure > summary strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+.rc-disclosure > summary span {
+  color: #77867d;
+  font-size: 12px;
+  margin-left: auto;
+}
+.rc-disclosure > summary::after {
+  content: "+";
+  color: #4d7962;
+  font-size: 20px;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+.rc-disclosure[open] > summary::after {
+  content: "−";
+}
+.rc-disclosure > summary:focus-visible {
+  outline: 2px solid #78a88c;
+  outline-offset: -3px;
+}
+.rc-disclosure > .rc-disclosure-body {
+  border-top: 1px solid #e6ece8;
+  margin: 0;
+  padding: 22px;
+}
+.rc-disclosure-body > .rc-panel:last-child {
+  margin-bottom: 0;
+}
+.rc-protection-settings .rc-policy-grid > .rc-panel {
+  margin-bottom: 0;
+  border: 0;
+  padding: 0;
+}
+.rc-protection-settings .rc-policy-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+.rc-protection-settings .rc-service-focused .rc-panel-heading h2 {
+  font-size: 14px;
+}
+.rc-service-focused .rc-panel-heading p {
+  font-size: 12px;
+}
+.rc-history-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.rc-history-summary button {
+  padding: 9px 13px;
+  background: white;
+  color: #5f7265;
+  border: 1px solid #dfe7e2;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.rc-history-summary button:hover {
+  border-color: #78a88c;
+}
+.rc-history-summary b {
+  color: #294d3a;
+  margin-left: 5px;
+}
+.rc-queue-focused .rc-filters {
+  flex-wrap: wrap;
+}
+.rc-queue-focused .rc-search {
+  flex: 1 1 210px;
+}
+.rc-queue-focused .rc-queue th,
+.rc-queue-focused .rc-queue td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.rc-resource-values {
+  display: grid;
+  gap: 5px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.rc-resource-help {
+  position: relative;
+  display: inline-block;
+}
+.rc-resource-help > summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  list-style: none;
+  cursor: pointer;
+}
+.rc-resource-help > summary::-webkit-details-marker {
+  display: none;
+}
+.rc-resource-help > summary:focus-visible {
+  outline: 2px solid #78a88c;
+  outline-offset: 4px;
+}
+.rc-resource-help > p {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #dfe7e2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 4px 12px #243f2f14;
+  color: #53665b;
+  white-space: normal;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.rc-queue-focused .rc-panel.rc-checker {
+  border: 0;
+  padding: 0;
+  margin-bottom: 15px;
+}
+.rc-evidence-focused .rc-disclosure-body > .rc-panel {
+  box-shadow: none;
+}
+.rc-evidence-focused .rc-strategy-memory > p,
+.rc-source-details p,
+.rc-source-details li {
+  font-size: 12px;
+  color: #5f7265;
+  line-height: 1.9;
+}
+.rc-source-details ul {
+  padding-left: 20px;
+}
+.rc-source-details li {
+  margin-bottom: 12px;
+}
+.rc-source-details code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1150px) {
+  .rc-strategy-focused .rc-strategy-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rc-strategy-focused .rc-strategy-scroll-hint {
+    display: block;
+    color: #75857b;
+    font-size: 11px;
+    margin: 10px 0 0;
+  }
+}
+@media (max-width: 760px) {
+  .rc-sidebar > button {
+    margin-right: 4px;
+  }
+  .rc-strategy-focused .rc-strategy-stats {
+    gap: 10px;
+  }
+  .rc-strategy-focused .rc-strategy-stats > button,
+  .rc-strategy-focused .rc-strategy-stats > div {
+    padding: 15px 12px;
+  }
+  .rc-strategy-focused .rc-strategy-stats strong {
+    font-size: 28px;
+  }
+  .rc-disclosure > summary {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 17px;
+  }
+  .rc-disclosure > summary strong {
+    flex: 1;
+  }
+  .rc-disclosure > summary span {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    font-size: 11px;
+  }
+  .rc-disclosure > summary span:empty {
+    display: none;
+  }
+  .rc-disclosure > .rc-disclosure-body {
+    padding: 16px;
+  }
+  .rc-strategy-focused .rc-strategy-main-table th,
+  .rc-strategy-focused .rc-strategy-main-table td {
+    padding: 14px 9px;
+  }
+  .rc-protection-settings .rc-policy-grid {
+    gap: 25px;
+  }
+  .rc-queue-focused .rc-panel-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .rc-resource-help > p {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    transform: none;
+    z-index: 10;
+  }
+}
+
+/* Rule performance colors are separate from the render outcome badges. */
+.render-app .rc-correct,
+.rc-strategy-stats > button:first-child strong {
+  color: #257356;
+}
+.render-app .rc-extra,
+.rc-strategy-stats > button:nth-child(2) strong {
+  color: #a46016;
+}
+.rc-cell-link.rc-extra {
+  text-decoration-color: #d7b88e;
+}
+.rc-cell-link.rc-extra:hover {
+  background: #fff3df;
+}
+.rc-rule-legend {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #687a70;
+  margin: 12px 0 0;
+}
+.rc-strategy-focused .rc-strategy-net.negative {
+  background: #fff4f0;
+  border-color: #e6c3b9;
+}
+.rc-logic-comparison > strong {
+  display: block;
+  color: #493b5b;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.rc-logic-comparison > p {
+  color: #493b5b;
+  font-size: 14px;
+}
+.rc-logic-comparison > small {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #6e637a;
+  line-height: 1.8;
+}
+.rc-service-decision.disabled,
+.rc-service-decision.check-input {
+  background: #f5f7f6;
+  border-color: #dfe7e2;
+  color: #5d6d64;
+}
