@@ -235,11 +235,6 @@
   font-size: 12px;
   line-height: 1.7;
 }
-.rc-queue-focused .rc-panel.rc-checker {
-  border: 0;
-  padding: 0;
-  margin-bottom: 15px;
-}
 .rc-evidence-focused .rc-disclosure-body > .rc-panel {
   box-shadow: none;
 }

@@ -1,8 +1,6 @@
 import { useMemo } from "react";
-import { SlidersHorizontal } from "lucide-react";
-import { compactNet, netLabel, netText } from "./presentation.mjs";
+import { compactNet, netText } from "./presentation.mjs";
 import RuleOutcomeMatrix from "./RuleOutcomeMatrix";
-import StrategyCostPanel from "./StrategyCostPanel";
 import { calculateMemoryCandidate } from "./threshold-strategy.mjs";
 import type { Metrics, Job } from "./RenderApp";
 import type { HistoryFilters } from "./service-policy.mjs";
@@ -10,46 +8,24 @@ const n = (v: number) =>
   v.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 const pct = (v: number | null) =>
   v === null ? "—" : `${(v * 100).toFixed(1)}%`;
-const pct2 = (v: number | null) =>
-  v === null ? "—" : `${(v * 100).toFixed(2)}%`;
 const candidateName = (label: string) =>
   label.replaceAll("不拦截", "不检查").replaceAll("全部拦截", "全部检查");
 type Policy = Metrics["all"];
 type Props = {
   metrics: Metrics;
   rows: Job[];
-  effect: number;
   memory: number;
   onMemoryChange: (value: number) => void;
-  onEffectChange: (v: number) => void;
   onShowQueue: (filters?: HistoryFilters) => void;
 };
 export default function EvidencePanel({
   metrics: m,
   rows,
-  effect,
   memory,
   onMemoryChange: setMemory,
-  onEffectChange: setEffect,
   onShowQueue,
 }: Props) {
-  const p = m.all,
-    v = m.validation;
-  const net =
-    (p.caughtFailures * m.costs.crash * effect) / 100 - p.interceptCost;
-  const vnet =
-    (v.caughtFailures * m.costs.crash * effect) / 100 - v.interceptCost;
-  const scenarioBest = [...m.candidates].sort((a, b) => {
-    const diff =
-      ((b.train.caughtFailures - a.train.caughtFailures) *
-        m.costs.crash *
-        effect) /
-        100 -
-      (b.train.interceptCost - a.train.interceptCost);
-    return Math.abs(diff) > 1e-9
-      ? diff
-      : a.train.intercepted - b.train.intercepted;
-  })[0];
+  const p = m.all;
   const gpu = useMemo(
     () => calculateMemoryCandidate(rows, memory, m.costs),
     [rows, memory, m.costs],
@@ -264,193 +240,6 @@ export default function EvidencePanel({
           </section>
         </div>
       </details>
-      <details className="rc-panel rc-disclosure">
-        <summary>
-          <strong>其他假设与额外投入</strong>
-          <span>避免失败比例、额外检查与人工投入</span>
-        </summary>
-        <div className="rc-disclosure-body">
-          <section className="rc-panel">
-            <div className="rc-panel-heading">
-              <div>
-                <h2>
-                  <SlidersHorizontal size={18} />
-                  避免失败比例（假设）
-                </h2>
-                <p>
-                  正确预警的历史失败中，有多少能通过检查与处理避免？此比例由你假设，非实测。
-                </p>
-              </div>
-            </div>
-            <label className="rc-slider-label">
-              避免失败比例（假设） <strong>{effect}%</strong>
-              <input
-                aria-label="避免失败比例（假设）"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={effect}
-                onChange={(e) => setEffect(Number(e.target.value))}
-              />
-            </label>
-            <div className="rc-scenario">
-              <span>
-                {netLabel(net)}（避免失败比例 {effect}%）
-              </span>
-              <strong className={net < 0 ? "negative" : ""}>
-                {n(Math.abs(net))} <small>工时</small>
-              </strong>
-              <p>
-                {p.caughtFailures} × 120 × {effect}% − {p.intercepted} × 20
-              </p>
-            </div>
-            <div className="rc-scenario-foot">
-              后两天时间复核：{netText(vnet)} · 不增加工时所需的避免失败比例 ≈{" "}
-              {pct(p.breakEvenEffectiveness)}
-            </div>
-          </section>
-          <StrategyCostPanel
-            groups={m.byTeam}
-            effect={effect}
-            costs={m.costs}
-            additionalOnly
-          />
-          <details className="rc-panel rc-disclosure">
-            <summary>
-              <strong>按团队查看试算结果</strong>
-              <span></span>
-            </summary>
-            <div className="rc-disclosure-body">
-              <section className="rc-panel">
-                <div className="rc-panel-heading">
-                  <div>
-                    <h2>按团队查看检查工时与节约</h2>
-                    <p>
-                      全量历史、20
-                      分钟对照方案。失败率只计已知结果，检查工时计入全部预警任务；客户重要性另行判断。
-                    </p>
-                  </div>
-                </div>
-                <div className="rc-table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>团队</th>
-                        <th>&lt;20 分钟失败率</th>
-                        <th>≥20 分钟失败率</th>
-                        <th>检查次数 / 结果未知</th>
-                        <th>净节约 / 净增加工时（{effect}%）</th>
-                        <th>不增加工时所需比例</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {m.byTeam.map((group) => {
-                        const benefit =
-                          (group.policy.caughtFailures *
-                            m.costs.crash *
-                            effect) /
-                            100 -
-                          group.policy.interceptCost;
-                        return (
-                          <tr key={group.name}>
-                            <td>{group.name}</td>
-                            <td>
-                              {pct2(group.below.failureRate)}
-                              <small>
-                                {group.below.failed} / {group.below.known}
-                              </small>
-                            </td>
-                            <td>
-                              {pct2(group.above.failureRate)}
-                              <small>
-                                {group.above.failed} / {group.above.known}
-                              </small>
-                            </td>
-                            <td>
-                              {group.policy.intercepted} /{" "}
-                              {group.policy.interceptedUnknown}
-                            </td>
-                            <td className={benefit < 0 ? "rc-negative" : ""}>
-                              {compactNet(benefit)}
-                            </td>
-                            <td>{pct2(group.policy.breakEvenEffectiveness)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="rc-fineprint">
-                  未计入交付保障、新功能验证和客户额外投入，不能据此削减必要服务。
-                  检查门槛和跟进时限在策略测算页设置。
-                </p>
-              </section>
-            </div>
-          </details>
-          <details className="rc-panel rc-disclosure">
-            <summary>
-              <strong>候选规则比较</strong>
-              <span></span>
-            </summary>
-            <div className="rc-disclosure-body">
-              <section className="rc-panel">
-                <div className="rc-panel-heading">
-                  <div>
-                    <h2>避免失败比例变化时，候选排序也会变化</h2>
-                    <p>
-                      开发期 {m.candidates.length}{" "}
-                      项候选的完整区间比较。所有候选暂用同一个
-                      避免失败比例；不代表未来最优或真实干预效果。
-                    </p>
-                  </div>
-                </div>
-                <div className="rc-notice">
-                  当前 {effect}% 情景下，开发期最优候选为{" "}
-                  <strong>{candidateName(scenarioBest.label)}</strong>。
-                  单任务预检仍采用 20 分钟对照方案。
-                </div>
-                <div className="rc-table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>避免失败比例区间</th>
-                        <th>开发期最优候选</th>
-                        <th>检查次数</th>
-                        <th>筛出的历史失败</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {m.ruleSensitivity.segments.map((segment) => (
-                        <tr key={segment.preferredRuleId}>
-                          <td>
-                            {pct2(segment.from.value)}—{pct2(segment.to.value)}
-                          </td>
-                          <td>{candidateName(segment.label)}</td>
-                          <td>{segment.intercepted}</td>
-                          <td>{segment.caughtFailures}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="rc-fineprint">
-                  精确切点：
-                  {m.ruleSensitivity.boundaries
-                    .filter((b) => b.ruleIds.length > 1)
-                    .map(
-                      (b) =>
-                        `${b.effectiveness.numerator}/${b.effectiveness.denominator}（约 ${pct2(b.effectiveness.value)}），平局取“${candidateName(b.label)}”`,
-                    )
-                    .join("；")}
-                  。端点附近以精确分数为准，不能把盈亏平衡点当成最优规则的切换点。
-                </p>
-              </section>
-            </div>
-          </details>
-        </div>
-      </details>
-
       <details className="rc-panel rc-disclosure">
         <summary>
           <strong>数据来源与适用范围</strong>

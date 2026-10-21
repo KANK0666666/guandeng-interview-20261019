@@ -7,7 +7,6 @@ import {
   FileCheck2,
   Info,
   Layers3,
-  RefreshCw,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -125,13 +124,6 @@ export type Metrics = {
   split: { caveat: string };
 };
 type Report = { metrics: Metrics; rows: Job[] };
-type CheckResult = {
-  decision: "intercept" | "pass" | "review";
-  lagMinutes: number | null;
-  reason: string;
-};
-const localInput = (v: string) =>
-  new Date(Date.parse(v) + 8 * 3600000).toISOString().slice(0, 16);
 const date = (v: string) =>
   new Date(v).toLocaleString("zh-CN", {
     timeZone: "Asia/Shanghai",
@@ -157,7 +149,6 @@ export default function RenderApp() {
   const [settingsOpen, setSettingsOpen] = useState(
     () => new URLSearchParams(window.location.search).get("view") === "service",
   );
-  const [precheckOpen, setPrecheckOpen] = useState(false);
   const [memory, setMemory] = useState(3);
   const [queueBasis, setQueueBasis] = useState<"current" | "original">(
     "current",
@@ -209,28 +200,7 @@ export default function RenderApp() {
     [page, setPage] = useState(1);
   const [scope, setScope] = useState<"all" | "hits" | "misses">("all");
   const [queueFocus, setQueueFocus] = useState(0);
-  const [effect, setEffect] = useState(() => {
-      try {
-        const saved = JSON.parse(
-          localStorage.getItem("render-effectiveness-v1") || "null",
-        );
-        if (
-          typeof saved === "number" &&
-          Number.isFinite(saved) &&
-          saved >= 0 &&
-          saved <= 100
-        )
-          return saved;
-      } catch {
-        /* Use the labeled default scenario if no valid setting exists. */
-      }
-      return 50;
-    }),
-    [selected, setSelected] = useState<Job | null>(null);
-  const [created, setCreated] = useState(""),
-    [synced, setSynced] = useState(""),
-    [checkResult, setCheckResult] = useState<CheckResult | null>(null),
-    [checking, setChecking] = useState(false);
+  const [selected, setSelected] = useState<Job | null>(null);
   const [reviewed, setReviewed] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("render-review-v1") || "[]");
@@ -239,25 +209,13 @@ export default function RenderApp() {
     }
   });
   useEffect(() => {
-    try {
-      localStorage.setItem("render-effectiveness-v1", JSON.stringify(effect));
-    } catch {
-      /* Keep the live calculation available without persistent storage. */
-    }
-  }, [effect]);
-  useEffect(() => {
     document.title = "RenderCare · 渲染提交预检";
     fetch("/api/render/report")
       .then(async (r) => {
         if (!r.ok) throw new Error("无法读取分析结果，请确认服务已启动。");
         return r.json();
       })
-      .then((r: Report) => {
-        setReport(r);
-        const first = r.rows.find((j) => j.intercept)!;
-        setCreated(localInput(first.created_at));
-        setSynced(localInput(first.asset_synced_at));
-      })
+      .then((r: Report) => setReport(r))
       .catch((e) => setError(e.message));
   }, []);
   useEffect(() => {
@@ -330,37 +288,6 @@ export default function RenderApp() {
       /* Local notes are optional. */
     }
   }
-  async function runCheck() {
-    setChecking(true);
-    setCheckResult(null);
-    try {
-      const r = await fetch("/api/render/preflight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          created_at: created ? `${created}:00+08:00` : "",
-          asset_synced_at: synced ? `${synced}:00+08:00` : "",
-        }),
-      });
-      if (!r.ok) throw new Error("预检请求失败");
-      const result: CheckResult = await r.json();
-      setCheckResult({
-        ...result,
-        reason:
-          result.decision !== "review" && result.lagMinutes !== null
-            ? syncReason(result.decision === "intercept", result.lagMinutes, 20)
-            : result.reason,
-      });
-    } catch (e) {
-      setCheckResult({
-        decision: "review",
-        lagMinutes: null,
-        reason: String(e),
-      });
-    } finally {
-      setChecking(false);
-    }
-  }
   if (error || !report)
     return (
       <div className="render-loading">
@@ -419,12 +346,6 @@ export default function RenderApp() {
           <Clock3 size={23} />
           <strong>历史测算</strong>
           <small>用于比较方案，尚未连接线上队列。</small>
-        </div>
-        <div className="rc-user">
-          <span>设</span>
-          <div>
-            三维设计师<small>本地单人工作区</small>
-          </div>
         </div>
       </aside>
       <main className="rc-main">
@@ -694,94 +615,13 @@ export default function RenderApp() {
                   </div>
                 </div>
               </section>
-              <details
-                id="single-precheck"
-                className="rc-panel rc-disclosure"
-                open={precheckOpen}
-                onToggle={(event) => setPrecheckOpen(event.currentTarget.open)}
-              >
-                <summary>
-                  <strong>试一次提交前预检</strong>
-                  <span>20 分钟对照方案</span>
-                </summary>
-                <div className="rc-disclosure-body">
-                  <section className="rc-panel rc-checker">
-                    <div className="rc-panel-heading">
-                      <div>
-                        <h2>
-                          <ShieldCheck size={18} />
-                          提交前预检
-                        </h2>
-                        <p>按 20 分钟对照方案判断，输入仅用于模拟。</p>
-                      </div>
-                      <span className="rc-small-label">北京时间 UTC+8</span>
-                    </div>
-                    <div className="rc-check-inputs">
-                      <label>
-                        准备提交时间
-                        <input
-                          aria-label="准备提交时间"
-                          type="datetime-local"
-                          value={created}
-                          onChange={(e) => {
-                            setCreated(e.target.value);
-                            setCheckResult(null);
-                          }}
-                        />
-                      </label>
-                      <label>
-                        资产最后同步完成时间
-                        <input
-                          aria-label="资产最后同步完成时间"
-                          type="datetime-local"
-                          value={synced}
-                          onChange={(e) => {
-                            setSynced(e.target.value);
-                            setCheckResult(null);
-                          }}
-                        />
-                      </label>
-                    </div>
-                    <div className="rc-check-bottom">
-                      <small>修改输入不会写入历史数据。</small>
-                      <button
-                        className="rc-primary"
-                        disabled={checking}
-                        onClick={runCheck}
-                      >
-                        {checking ? "检查中…" : "运行预检"}
-                        <ArrowUpRight size={16} />
-                      </button>
-                    </div>
-                    {checkResult && (
-                      <div
-                        className={`rc-check-result ${checkResult.decision}`}
-                      >
-                        <strong>
-                          {checkResult.decision === "intercept"
-                            ? "已预警，建议检查资产"
-                            : checkResult.decision === "pass"
-                              ? "未预警"
-                              : "需要核对输入"}
-                        </strong>
-                        <p>{checkResult.reason}</p>
-                      </div>
-                    )}
-                  </section>
-                  <p className="rc-page-note">
-                    建议处理：核对版本 → 必要时重新同步 → 记录实际结果与耗时。
-                  </p>
-                </div>
-              </details>
             </div>
           ) : (
             <EvidencePanel
               metrics={m}
               rows={report.rows}
-              effect={effect}
               memory={memory}
               onMemoryChange={setMemory}
-              onEffectChange={setEffect}
               onShowQueue={(filters) => showHistory(filters, "original")}
             />
           )}
@@ -827,27 +667,8 @@ export default function RenderApp() {
             <p className="rc-feature-timing rc-detail-timing">
               <strong>显存记录时间不明，可能用了事后信息</strong>
               CSV
-              未记录它何时被采集、何时可被系统使用。若来自运行中或失败后，不能用于提交前预测；“带入预检”仅带入两个时间。
+              未记录它何时被采集、何时可被系统使用。若来自运行中或失败后，不能用于提交前预测。
             </p>
-            <button
-              className="rc-primary"
-              onClick={() => {
-                setCreated(localInput(selected.created_at));
-                setSynced(localInput(selected.asset_synced_at));
-                setCheckResult(null);
-                setSelected(null);
-                setPrecheckOpen(true);
-                setTab("queue");
-                requestAnimationFrame(() =>
-                  document
-                    .getElementById("single-precheck")
-                    ?.scrollIntoView({ block: "start", behavior: "smooth" }),
-                );
-              }}
-            >
-              <RefreshCw size={16} />
-              带入 20 分钟对照方案预检
-            </button>
           </section>
         </div>
       )}

@@ -273,30 +273,6 @@ select:focus-visible {
   font-size: 10px;
   color: #97a29c;
 }
-.rc-user {
-  margin-top: 23px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 0 10px;
-  font-size: 12px;
-}
-.rc-user > span {
-  width: 29px;
-  height: 29px;
-  background: #f0ede7;
-  border: 1px solid #e3dfd6;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #90826c;
-}
-.rc-user small {
-  display: block;
-  color: #a0a8ae;
-  font-size: 10px;
-  margin-top: 3px;
-}
 .rc-main {
   margin-left: 230px;
   flex: 1;
@@ -490,59 +466,6 @@ select:focus-visible {
   color: #9ba4a9;
   font-size: 9px;
   white-space: nowrap;
-}
-.rc-check-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-.rc-check-inputs label {
-  font-size: 10px;
-  color: #849188;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.rc-check-inputs input {
-  min-width: 0;
-  border: 1px solid #e3e9e5;
-  border-radius: 6px;
-  padding: 10px 9px;
-  color: #4c5e55;
-  font-size: 11px;
-  background: #fcfdfc;
-  width: 100%;
-}
-.rc-check-bottom {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-.rc-check-bottom small {
-  font-size: 9px;
-  color: #a2aaa7;
-  max-width: 230px;
-  line-height: 1.8;
-}
-.rc-check-result {
-  border-radius: 6px;
-  padding: 13px 15px;
-  margin-top: 15px;
-  font-size: 11px;
-  background: #f5f0e5;
-  color: #806332;
-  border: 1px solid #ebe0c8;
-}
-.rc-check-result.pass {
-  background: #edf6f1;
-  color: #396e55;
-  border-color: #d4e8dc;
-}
-.rc-check-result p {
-  line-height: 1.8;
-  margin: 5px 0 0;
 }
 .rc-action {
   background: linear-gradient(115deg, #fff, #f9fbfa);
@@ -1682,8 +1605,7 @@ select:focus-visible {
   }
   .rc-workspace,
   .rc-nav-label,
-  .rc-sidebar-note,
-  .rc-user {
+  .rc-sidebar-note {
     display: none;
   }
   .render-app {
@@ -1734,9 +1656,6 @@ select:focus-visible {
     max-width: none;
     min-width: 100%;
   }
-  .rc-check-inputs {
-    grid-template-columns: 1fr;
-  }
   .rc-panel-heading {
     align-items: flex-start;
   }
@@ -1755,11 +1674,5 @@ select:focus-visible {
   }
   .rc-pagination > div {
     gap: 7px;
-  }
-  .rc-check-bottom {
-    align-items: flex-start;
-  }
-  .rc-check-bottom small {
-    max-width: 145px;
   }
 }
